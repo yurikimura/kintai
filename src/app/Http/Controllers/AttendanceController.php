@@ -97,4 +97,51 @@ class AttendanceController extends Controller
             'attendance' => $attendance
         ]);
     }
+
+    public function end(Request $request)
+    {
+        $user = Auth::user();
+        $now = Carbon::now();
+
+        $attendance = Attendance::where('user_id', $user->id)
+            ->where('date', $now->format('Y-m-d'))
+            ->whereNull('end_time')
+            ->latest()
+            ->first();
+
+        if (!$attendance) {
+            return response()->json(['error' => '出勤記録が見つかりません'], 404);
+        }
+
+        $attendance->update([
+            'end_time' => $now->format('H:i:s')
+        ]);
+
+        return response()->json([
+            'message' => '退勤記録が完了しました',
+            'attendance' => $attendance
+        ]);
+    }
+
+    public function getCurrentStatus()
+    {
+        $user = Auth::user();
+        $now = Carbon::now();
+
+        $attendance = Attendance::where('user_id', $user->id)
+            ->where('date', $now->format('Y-m-d'))
+            ->whereNull('end_time')
+            ->latest()
+            ->first();
+
+        if (!$attendance) {
+            return response()->json(['status' => 'not_working']);
+        }
+
+        if ($attendance->break_start_time && !$attendance->break_end_time) {
+            return response()->json(['status' => 'on_break']);
+        }
+
+        return response()->json(['status' => 'working']);
+    }
 }

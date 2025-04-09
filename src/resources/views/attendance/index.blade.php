@@ -148,17 +148,31 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     endWorkBtn.addEventListener('click', function() {
-        // ここでAPIを呼び出して退勤時間を記録
-        endWorkBtn.classList.add('hidden');
-        startBreakBtn.classList.add('hidden');
-        endBreakBtn.classList.add('hidden');
-        statusBadge.textContent = '勤務外';
+        fetch('/attendance/end', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': token
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('退勤記録が完了しました:', data);
+            endWorkBtn.classList.add('hidden');
+            startBreakBtn.classList.add('hidden');
+            endBreakBtn.classList.add('hidden');
+            statusBadge.textContent = '勤務外';
 
-        // メッセージを表示
-        thankYouMessage.classList.remove('hidden');
-        setTimeout(() => {
-            thankYouMessage.classList.add('show');
-        }, 100);
+            // メッセージを表示
+            thankYouMessage.classList.remove('hidden');
+            setTimeout(() => {
+                thankYouMessage.classList.add('show');
+            }, 100);
+        })
+        .catch(error => {
+            console.error('退勤記録中にエラーが発生しました:', error);
+            alert('退勤記録に失敗しました。もう一度お試しください。');
+        });
     });
 
     startBreakBtn.addEventListener('click', function() {
