@@ -34,7 +34,7 @@ class AttendanceController extends Controller
         $attendance = Attendance::create([
             'user_id' => $user->id,
             'date' => $now->format('Y-m-d'),
-            'start_time' => $now->format('H:i:s'),
+            'start_time' => $now,
         ]);
 
         return response()->json([
@@ -114,7 +114,7 @@ class AttendanceController extends Controller
         }
 
         $attendance->update([
-            'end_time' => $now->format('H:i:s')
+            'end_time' => $now
         ]);
 
         return response()->json([

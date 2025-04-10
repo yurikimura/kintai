@@ -29,4 +29,25 @@ class Attendance extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function calculateWorkTime()
+    {
+        if (!$this->start_time || !$this->end_time) {
+            return 0;
+        }
+
+        $totalMinutes = $this->end_time->diffInMinutes($this->start_time);
+        return $totalMinutes - $this->break_time;
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($attendance) {
+            if ($attendance->end_time) {
+                $attendance->work_time = $attendance->calculateWorkTime();
+            }
+        });
+    }
 }

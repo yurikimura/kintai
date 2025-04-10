@@ -186,15 +186,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 'X-CSRF-TOKEN': token
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => Promise.reject(err));
+            }
+            return response.json();
+        })
         .then(data => {
-            console.log('退勤記録が完了しました:', data);
+            console.log('退勤記録の詳細:', data);
             endWorkBtn.classList.add('hidden');
             startBreakBtn.classList.add('hidden');
             endBreakBtn.classList.add('hidden');
             statusBadge.textContent = '勤務外';
 
-            // メッセージを表示
             thankYouMessage.classList.remove('hidden');
             setTimeout(() => {
                 thankYouMessage.classList.add('show');
@@ -202,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('退勤記録中にエラーが発生しました:', error);
-            alert('退勤記録に失敗しました。もう一度お試しください。');
+            alert('退勤記録に失敗しました: ' + (error.error || '不明なエラー'));
         });
     });
 

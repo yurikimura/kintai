@@ -36,7 +36,9 @@
 <body>
     <header class="header">
         <div class="header__inner">
-            <img src="{{ asset('img/logo.png') }}" alt="COACHTECH" class="header__logo">
+            <a href="/attendance">
+                <img src="{{ asset('img/logo.png') }}" alt="COACHTECH" class="header__logo">
+            </a>
             @if(!Request::is('login') && !Request::is('register'))
             <nav class="header__nav">
                 <a href="/attendance" class="header__nav-link">勤怠</a>
