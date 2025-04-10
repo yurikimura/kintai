@@ -83,6 +83,10 @@ class AttendanceController extends Controller
             return response()->json(['error' => '出勤記録が見つかりません'], 404);
         }
 
+        if (!$attendance->break_start_time) {
+            return response()->json(['error' => '休憩開始の記録が見つかりません'], 400);
+        }
+
         $breakStart = Carbon::createFromFormat('H:i:s', $attendance->break_start_time);
         $breakEnd = $now;
         $breakTime = $breakStart->diffInMinutes($breakEnd);
