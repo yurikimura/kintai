@@ -31,6 +31,19 @@ class AttendanceController extends Controller
         $user = Auth::user();
         $now = Carbon::now();
 
+        // 同じ日に既に出勤記録があるかチェック
+        $existingAttendance = Attendance::where('user_id', $user->id)
+            ->where('date', $now->format('Y-m-d'))
+            ->whereNull('end_time')
+            ->first();
+
+        // if ($existingAttendance) {
+        //     return response()->json([
+        //         'message' => '既に出勤記録が存在します',
+        //         'attendance' => $existingAttendance
+        //     ], 400);
+        // }
+
         $attendance = Attendance::create([
             'user_id' => $user->id,
             'date' => $now->format('Y-m-d'),

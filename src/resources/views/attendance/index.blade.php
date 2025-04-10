@@ -165,7 +165,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 'X-CSRF-TOKEN': token
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => Promise.reject(err));
+            }
+            return response.json();
+        })
         .then(data => {
             console.log('出勤記録が完了しました:', data);
             startWorkBtn.classList.add('hidden');
@@ -175,7 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('出勤記録中にエラーが発生しました:', error);
-            alert('出勤記録に失敗しました。もう一度お試しください。');
+            alert(error.message || '出勤記録に失敗しました。もう一度お試しください。');
         });
     });
 
