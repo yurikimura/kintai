@@ -49,5 +49,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware(['auth:admin'])->group(function () {
         Route::get('/attendance/list', [App\Http\Controllers\Admin\AttendanceController::class, 'list'])->name('attendance.list');
         Route::get('/attendance/{id}', [App\Http\Controllers\Admin\AttendanceController::class, 'show'])->name('attendance.show');
+        Route::get('/staff/list', [App\Http\Controllers\Admin\StaffController::class, 'list'])->name('staff.list');
     });
 });
