@@ -14,10 +14,23 @@ class AttendanceController extends Controller
         return view('attendance.index');
     }
 
-    public function list()
+    public function list(Request $request)
     {
-        $attendances = Attendance::where('user_id', auth()->id())->orderBy('date', 'desc')->get();
-        return view('attendance.list', compact('attendances'));
+        $date = $request->input('date') ? Carbon::parse($request->input('date')) : Carbon::now();
+        $startOfMonth = $date->copy()->startOfMonth();
+        $endOfMonth = $date->copy()->endOfMonth();
+
+        $attendances = Attendance::where('user_id', auth()->id())
+            ->whereBetween('date', [$startOfMonth, $endOfMonth])
+            ->orderBy('date', 'asc')
+            ->get();
+
+        return view('attendance.list', [
+            'attendances' => $attendances,
+            'current_month' => $date->format('Y-m'),
+            'previous_month' => $date->copy()->subMonth()->format('Y-m'),
+            'next_month' => $date->copy()->addMonth()->format('Y-m'),
+        ]);
     }
 
     public function show($id)

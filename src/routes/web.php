@@ -34,7 +34,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/attendance/break/end', [App\Http\Controllers\AttendanceController::class, 'endBreak'])->name('attendance.break.end');
     Route::post('/attendance/end', [App\Http\Controllers\AttendanceController::class, 'end'])->name('attendance.end');
     Route::get('/attendance/status', [App\Http\Controllers\AttendanceController::class, 'getCurrentStatus'])->name('attendance.status');
-    Route::get('/stamp_correction_request/list', [App\Http\Controllers\StampCorrectionRequestController::class, 'list'])->name('stamp_correction_request.list');
+
+    // 打刻修正申請のルート
+    Route::post('/stamp-correction-request', [App\Http\Controllers\StampCorrectionRequestController::class, 'store'])->name('stamp_correction_request.store');
+    Route::get('/stamp-correction-request/list', [App\Http\Controllers\StampCorrectionRequestController::class, 'list'])->name('stamp_correction_request.list');
 });
 
 // 管理者用のルート
