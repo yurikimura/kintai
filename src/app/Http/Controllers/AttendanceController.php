@@ -85,7 +85,7 @@ class AttendanceController extends Controller
         }
 
         $attendance->update([
-            'break_start_time' => $now->format('H:i:s')
+            'start_break_time' => $now
         ]);
 
         return response()->json([
@@ -109,17 +109,15 @@ class AttendanceController extends Controller
             return response()->json(['error' => '出勤記録が見つかりません'], 404);
         }
 
-        if (!$attendance->break_start_time) {
+        if (!$attendance->start_break_time) {
             return response()->json(['error' => '休憩開始の記録が見つかりません'], 400);
         }
 
-        $breakStart = Carbon::createFromFormat('H:i:s', $attendance->break_start_time);
-        $breakEnd = $now;
-        $breakTime = $breakStart->diffInMinutes($breakEnd);
+        $breakTime = $attendance->start_break_time->diffInMinutes($now);
 
         $attendance->update([
-            'break_end_time' => $now->format('H:i:s'),
-            'break_time' => $breakTime
+            'end_break_time' => $now,
+            'break_time' => $attendance->break_time + $breakTime
         ]);
 
         return response()->json([

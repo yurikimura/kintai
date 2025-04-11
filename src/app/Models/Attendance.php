@@ -14,6 +14,8 @@ class Attendance extends Model
         'date',
         'start_time',
         'end_time',
+        'start_break_time',
+        'end_break_time',
         'break_time',
         'work_time',
         'status',
@@ -24,12 +26,25 @@ class Attendance extends Model
         'date' => 'date',
         'start_time' => 'datetime',
         'end_time' => 'datetime',
+        'start_break_time' => 'datetime',
+        'end_break_time' => 'datetime',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
+
+    public function calculateBreakTime()
+    {
+        if (!$this->start_break_time || !$this->end_break_time) {
+            return 0;
+        }
+
+        $totalMinutes = $this->end_break_time->diffInMinutes($this->start_break_time);
+        return $totalMinutes - $this->break_time;
+    }
+
 
     public function calculateWorkTime()
     {
