@@ -1,4 +1,6 @@
 .form__button-submit {
+    display: flex;
+    justify-content: center;
     text-align: center;
     width: 100%;
     padding: 10px;
@@ -59,4 +61,5 @@
 
 .form__button {
     margin-top: 30px;
+    text-align: center;
 }
