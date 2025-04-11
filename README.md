@@ -1,4 +1,4 @@
-# フリマアプリ
+# 勤怠管理アプリ
 
 ## 環境構築
 
@@ -62,6 +62,6 @@ docker compose exec php php artisan config:cache
 ## ER 図
 
 
->>>>>>> 6415168 (seedの追加)
+
 - ホーム画面 http://localhost/
 - phpMyAdmin : http://localhost:8080/
