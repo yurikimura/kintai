@@ -4,11 +4,11 @@
 <div class="attendance-list">
     <div class="attendance-header">
         <h2>勤怠一覧</h2>
-        <div class="month-selector">
-            <a href="?date={{ $previous_month }}" class="month-link">&lt;</a>
-            <span class="current-month">{{ \Carbon\Carbon::parse($current_month)->format('Y年m月') }}</span>
-            <a href="?date={{ $next_month }}" class="month-link">&gt;</a>
-        </div>
+    </div>
+    <div class="month-selector">
+        <a href="?date={{ $previous_month }}" class="month-link">前月</a>
+        <span class="current-month">{{ \Carbon\Carbon::parse($current_month)->format('Y/m') }}</span>
+        <a href="?date={{ $next_month }}" class="month-link">翌月</a>
     </div>
     <div class="attendance-table">
         <table>
@@ -49,27 +49,33 @@
 
 .attendance-header {
     margin-bottom: 20px;
+    border-left: 4px solid #000;
+    padding-left: 10px;
 }
 
 .attendance-header h2 {
-    font-size: 18px;
-    margin-bottom: 15px;
+    font-size: 24px;
+    margin: 0;
+    font-weight: bold;
 }
 
 .month-selector {
     display: flex;
     align-items: center;
-    gap: 20px;
-    margin-bottom: 20px;
+    justify-content: center;
+    gap: 40px;
+    margin: 30px 0;
 }
 
 .month-link {
     text-decoration: none;
     color: #000;
+    font-weight: bold;
 }
 
 .current-month {
-    font-size: 16px;
+    font-size: 20px;
+    font-weight: bold;
 }
 
 .attendance-table {
