@@ -15,11 +15,11 @@
             <thead>
                 <tr>
                     <th>日付</th>
-                    <th>勤務開始</th>
-                    <th>勤務終了</th>
-                    <th>休憩時間</th>
-                    <th>勤務時間</th>
-                    <th>状態</th>
+                    <th>出勤</th>
+                    <th>退勤</th>
+                    <th>休憩</th>
+                    <th>合計</th>
+                    <th>詳細</th>
                 </tr>
             </thead>
             <tbody>
@@ -30,7 +30,9 @@
                     <td>{{ $attendance->end_time ? $attendance->end_time->format('H:i') : '-' }}</td>
                     <td>{{ $attendance->break_time }}:00</td>
                     <td>{{ $attendance->work_time }}:00</td>
-                    <td>{{ $attendance->status }}</td>
+                    <td>
+                        <a href="{{ route('attendance.show', ['id' => $attendance->id]) }}" class="detail-link">詳細</a>
+                    </td>
                 </tr>
                 @endforeach
             </tbody>
@@ -98,6 +100,22 @@ td {
 
 tr:hover {
     background-color: #f8f8f8;
+}
+
+.detail-link {
+    display: inline-block;
+    padding: 4px 12px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    color: #333;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.detail-link:hover {
+    background-color: #f5f5f5;
+    text-decoration: none;
 }
 </style>
 @endsection
