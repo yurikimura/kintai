@@ -39,6 +39,30 @@ class AttendanceController extends Controller
         return view('attendance.show', compact('attendance'));
     }
 
+    public function update(Request $request, $id)
+    {
+        $attendance = Attendance::where('user_id', auth()->id())->findOrFail($id);
+
+        $request->validate([
+            'start_time' => 'nullable|date_format:H:i',
+            'end_time' => 'nullable|date_format:H:i',
+            'start_break_time' => 'nullable|date_format:H:i',
+            'end_break_time' => 'nullable|date_format:H:i',
+            'note' => 'nullable|string|max:1000',
+        ]);
+
+        $attendance->update([
+            'start_time' => $request->start_time ? Carbon::parse($request->start_time) : null,
+            'end_time' => $request->end_time ? Carbon::parse($request->end_time) : null,
+            'start_break_time' => $request->start_break_time ? Carbon::parse($request->start_break_time) : null,
+            'end_break_time' => $request->end_break_time ? Carbon::parse($request->end_break_time) : null,
+            'note' => $request->note,
+        ]);
+
+        return redirect()->route('attendance.show', $id)
+            ->with('success', '勤怠情報を更新しました');
+    }
+
     public function store(Request $request)
     {
         $user = Auth::user();
