@@ -37,10 +37,9 @@
             <label>備考</label>
             <textarea class="note-box" rows="4">{{ $attendance->note }}</textarea>
         </div>
-
-        <div class="form-actions">
-            <button type="button" class="edit-button">修正</button>
-        </div>
+    </div>
+    <div class="form-actions">
+        <button type="button" class="edit-button">修正</button>
     </div>
 </div>
 
@@ -110,13 +109,17 @@
     min-height: 60px;
 }
 
+.form-actions {
+    margin-top: 20px;
+    text-align: right;
+}
+
 .edit-button {
     background: #000;
     color: #fff;
     padding: 10px 30px;
     border: none;
     border-radius: 4px;
-    float: right;
     cursor: pointer;
     transition: opacity 0.3s;
 }
