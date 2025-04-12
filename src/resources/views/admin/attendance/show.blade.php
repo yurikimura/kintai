@@ -1,8 +1,8 @@
-@extends('layouts.header')
+@extends('layouts.admin')
 
 @section('content')
 <div class="attendance-detail-container">
-    <h2 class="detail-title">勤怠詳細</h2>
+    <h2 class="detail-title">勤怠詳細（管理者）</h2>
 
     <div class="attendance-card">
         <div class="form-group">

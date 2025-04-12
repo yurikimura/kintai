@@ -11,28 +11,28 @@ class AttendanceController extends Controller
 {
     public function list(Request $request)
     {
-        $date = $request->input('date') ? Carbon::parse($request->input('date')) : Carbon::today();
+        $date = $request->input('date') ? Carbon::parse($request->input('date')) : Carbon::now();
+        $startOfMonth = $date->copy()->startOfMonth();
+        $endOfMonth = $date->copy()->endOfMonth();
 
         $attendances = Attendance::with('user')
-            ->whereDate('created_at', $date)
-            ->get()
-            ->map(function ($attendance) {
-                return [
-                    'user_name' => $attendance->user->name,
-                    'start_time' => $attendance->start_time ? Carbon::parse($attendance->start_time)->format('H:i') : '-',
-                    'end_time' => $attendance->end_time ? Carbon::parse($attendance->end_time)->format('H:i') : '-',
-                    'break_time' => $attendance->break_time ?? 0,
-                    'total_time' => $this->calculateTotalTime($attendance),
-                    'id' => $attendance->id
-                ];
-            });
+            ->whereBetween('date', [$startOfMonth, $endOfMonth])
+            ->orderBy('date', 'asc')
+            ->orderBy('user_id', 'asc')
+            ->get();
 
         return view('admin.attendance.list', [
             'attendances' => $attendances,
-            'current_date' => $date->format('Y-m-d'),
-            'previous_date' => $date->copy()->subDay()->format('Y-m-d'),
-            'next_date' => $date->copy()->addDay()->format('Y-m-d'),
+            'current_month' => $date->format('Y-m'),
+            'previous_month' => $date->copy()->subMonth()->format('Y-m'),
+            'next_month' => $date->copy()->addMonth()->format('Y-m'),
         ]);
+    }
+
+    public function show($id)
+    {
+        $attendance = Attendance::with('user')->findOrFail($id);
+        return view('admin.attendance.show', compact('attendance'));
     }
 
     private function calculateTotalTime($attendance)
