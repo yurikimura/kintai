@@ -103,19 +103,12 @@ tr:hover {
 }
 
 .detail-link {
-    display: inline-block;
-    padding: 4px 12px;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 4px;
     color: #333;
     text-decoration: none;
-    font-size: 14px;
 }
 
 .detail-link:hover {
-    background-color: #f5f5f5;
-    text-decoration: none;
+    text-decoration: underline;
 }
 </style>
 @endsection
