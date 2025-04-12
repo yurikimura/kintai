@@ -1,96 +1,133 @@
-@extends('layouts.app')
+@extends('layouts.header')
 
 @section('content')
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="mb-0">勤怠詳細</h2>
-                </div>
-                <div class="card-body">
-                    <table class="table">
-                        <tr>
-                            <th style="width: 30%">名前</th>
-                            <td>{{ auth()->user()->name }}</td>
-                        </tr>
-                        <tr>
-                            <th>年月日</th>
-                            <td>{{ $attendance->date->format('Y年m月d日') }}</td>
-                        </tr>
-                        <tr>
-                            <th>出勤時間</th>
-                            <td>{{ $attendance->start_time ? $attendance->start_time->format('H:i') : '-' }}</td>
-                        </tr>
-                        <tr>
-                            <th>退勤時間</th>
-                            <td>{{ $attendance->end_time ? $attendance->end_time->format('H:i') : '-' }}</td>
-                        </tr>
-                        <tr>
-                            <th>休憩時間</th>
-                            <td>{{ $attendance->break_time }}分</td>
-                        </tr>
-                        <tr>
-                            <th>備考</th>
-                            <td>{{ $attendance->remarks ?? '-' }}</td>
-                        </tr>
-                    </table>
+<div class="attendance-detail-container">
+    <h2 class="detail-title">勤怠詳細</h2>
 
-                    <button type="button" class="btn btn-dark text-white" data-bs-toggle="modal" data-bs-target="#correctionModal">
-                        修正
-                    </button>
-                </div>
+    <div class="attendance-card">
+        <div class="form-group">
+            <label>名前</label>
+            <div class="form-value">{{ $attendance->user->name }}</div>
+        </div>
+
+        <div class="form-group">
+            <label>日付</label>
+            <div class="form-value">{{ $attendance->date->format('Y年m月d日') }}</div>
+        </div>
+
+        <div class="form-group">
+            <label>出勤・退勤</label>
+            <div class="time-range">
+                <input type="time" value="{{ $attendance->start_time ? $attendance->start_time->format('H:i') : '' }}" readonly>
+                <span class="time-separator">〜</span>
+                <input type="time" value="{{ $attendance->end_time ? $attendance->end_time->format('H:i') : '' }}" readonly>
             </div>
+        </div>
+
+        <div class="form-group">
+            <label>休憩</label>
+            <div class="time-range">
+                <input type="time" value="{{ $attendance->start_break_time ? $attendance->start_break_time->format('H:i') : '' }}" readonly>
+                <span class="time-separator">〜</span>
+                <input type="time" value="{{ $attendance->end_break_time ? $attendance->end_break_time->format('H:i') : '' }}" readonly>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>備考</label>
+            <div class="note-box">{{ $attendance->note }}</div>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="edit-button">修正</button>
         </div>
     </div>
 </div>
 
-<!-- 修正モーダル -->
-<div class="modal fade" id="correctionModal" tabindex="-1" aria-labelledby="correctionModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="correctionModalLabel">勤怠修正申請</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="{{ route('stamp_correction_request.store') }}" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <input type="hidden" name="attendance_id" value="{{ $attendance->id }}">
+<style>
+.attendance-detail-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
 
-                    <div class="mb-3">
-                        <label for="request_type" class="form-label">修正項目</label>
-                        <select class="form-select" id="request_type" name="request_type" required>
-                            <option value="start_time">出勤時間</option>
-                            <option value="end_time">退勤時間</option>
-                        </select>
-                    </div>
+.detail-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 30px;
+    border-left: 5px solid #000;
+    padding-left: 10px;
+}
 
-                    <div class="mb-3">
-                        <label for="request_time" class="form-label">修正後の時間</label>
-                        <input type="datetime-local" class="form-control" id="request_time" name="request_time" required>
-                    </div>
+.attendance-card {
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
 
-                    <div class="mb-3">
-                        <label for="reason" class="form-label">修正理由</label>
-                        <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
-                    <button type="submit" class="btn btn-primary">申請する</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.form-value {
+    font-size: 16px;
+    padding: 8px 0;
+}
+
+.time-range {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.time-range input {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #f8f8f8;
+}
+
+.time-separator {
+    color: #666;
+}
+
+.note-box {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    min-height: 60px;
+    background: #f8f8f8;
+}
+
+.edit-button {
+    background: #000;
+    color: #fff;
+    padding: 10px 30px;
+    border: none;
+    border-radius: 4px;
+    float: right;
+    cursor: pointer;
+    transition: opacity 0.3s;
+}
+
+.edit-button:hover {
+    opacity: 0.8;
+}
+</style>
 
 @if (session('success'))
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+<div class="toast-container">
+    <div class="toast show" role="alert">
         <div class="toast-header">
-            <strong class="me-auto">通知</strong>
-            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            <strong>通知</strong>
+            <button type="button" class="toast-close" data-bs-dismiss="toast" aria-label="Close">×</button>
         </div>
         <div class="toast-body">
             {{ session('success') }}
