@@ -4,8 +4,9 @@
 <div class="attendance-detail-container">
     <h2 class="detail-title">勤怠詳細</h2>
 
-    <form action="{{ route('attendance.update', $attendance->id) }}" method="PUT">
+    <form action="{{ route('attendance.update', $attendance->id) }}" method="POST">
         @csrf
+        @method('PUT')
         <div class="attendance-card">
             <div class="form-group">
                 <label>名前</label>
@@ -20,24 +21,24 @@
             <div class="form-group">
                 <label>出勤・退勤</label>
                 <div class="time-range">
-                    <input type="time" value="{{ $attendance->start_time ? $attendance->start_time->format('H:i') : '' }}">
+                    <input type="time" name="start_time" value="{{ $attendance->start_time ? $attendance->start_time->format('H:i') : '' }}">
                     <span class="time-separator">〜</span>
-                    <input type="time" value="{{ $attendance->end_time ? $attendance->end_time->format('H:i') : '' }}">
+                    <input type="time" name="end_time" value="{{ $attendance->end_time ? $attendance->end_time->format('H:i') : '' }}">
                 </div>
             </div>
 
             <div class="form-group">
                 <label>休憩</label>
                 <div class="time-range">
-                    <input type="time" value="{{ $attendance->start_break_time ? $attendance->start_break_time->format('H:i') : '' }}">
+                    <input type="time" name="start_break_time" value="{{ $attendance->start_break_time ? $attendance->start_break_time->format('H:i') : '' }}">
                     <span class="time-separator">〜</span>
-                    <input type="time" value="{{ $attendance->end_break_time ? $attendance->end_break_time->format('H:i') : '' }}">
+                    <input type="time" name="end_break_time" value="{{ $attendance->end_break_time ? $attendance->end_break_time->format('H:i') : '' }}">
                 </div>
             </div>
 
             <div class="form-group">
                 <label>備考</label>
-                <textarea class="note-box" rows="4">{{ $attendance->note }}</textarea>
+                <textarea class="note-box" name="note" rows="4">{{ $attendance->note }}</textarea>
             </div>
         </div>
         <div class="form-actions">
