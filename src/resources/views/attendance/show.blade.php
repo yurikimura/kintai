@@ -109,7 +109,6 @@
     background: #f8f8f8;
     resize: vertical;
     font-family: inherit;
-    font-size: 9px;
     min-height: 60px;
 }
 

@@ -41,14 +41,26 @@ class StampCorrectionRequestController extends Controller
             ->with('success', '打刻修正申請を送信しました。');
     }
 
-    public function list()
+    public function list(Request $request)
     {
-        $requests = StampCorrectionRequest::where('user_id', auth()->id())
-            ->with('attendances')
-            ->orderBy('created_at', 'desc')
-            ->get();
-var_dump(auth()->id());
+        $status = $request->input('status', 'pending');
 
-        return view('stamp_correction_request.list', compact('requests'));
+        $query = StampCorrectionRequest::where('user_id', auth()->id())
+            ->with('user')
+            ->with('attendance');
+
+        if ($status === 'pending') {
+            $query->whereHas('attendance', function ($q) {
+                $q->where('status', 'pending');
+            });
+        } elseif ($status === 'approved') {
+            $query->whereHas('attendance', function ($q) {
+                $q->where('status', 'approved');
+            });
+        }
+
+        $requests = $query->orderBy('created_at', 'desc')->get();
+
+        return view('stamp_correction_request.list', compact('requests', 'status'));
     }
 }

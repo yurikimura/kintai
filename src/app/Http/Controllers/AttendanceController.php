@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Attendance;
+use App\Models\StampCorrectionRequest;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
@@ -57,6 +58,11 @@ class AttendanceController extends Controller
             'start_break_time' => $request->start_break_time ? Carbon::parse($request->start_break_time) : null,
             'end_break_time' => $request->end_break_time ? Carbon::parse($request->end_break_time) : null,
             'remarks' => $request->remarks,
+        ]);
+
+        StampCorrectionRequest::create([
+            'user_id' => auth()->id(),
+            'attendance_id' => $id,
         ]);
 
         return redirect()->route('attendance.show', $id)
