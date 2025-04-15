@@ -3,30 +3,28 @@
 @section('content')
 <div class="card">
     <div class="card-header">
-        <h2>打刻修正申請一覧</h2>
+        <h2>申請一覧</h2>
     </div>
     <div class="card-body">
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>申請日</th>
-                    <th>対象日</th>
-                    <th>申請種別</th>
-                    <th>現在の時間</th>
-                    <th>修正後の時間</th>
                     <th>状態</th>
-                    <th>操作</th>
+                    <th>名前</th>
+                    <th>対象日</th>
+                    <th>申請理由</th>
+                    <th>申請日</th>
+                    <th>詳細</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($requests as $request)
                 <tr>
-                    <td>{{ $request->created_at->format('Y-m-d') }}</td>
-                    <td>{{ $request->request_date->format('Y-m-d') }}</td>
-                    <td>{{ $request->request_type === 'start_time' ? '出勤時間' : '退勤時間' }}</td>
-                    <td>{{ $request->current_time->format('H:i') }}</td>
-                    <td>{{ $request->request_time->format('H:i') }}</td>
                     <td>{{ $request->status }}</td>
+                    <td>{{ $request->user->name }}</td>
+                    <td>{{ $request->request_date->format('Y-m-d') }}</td>
+                    <td>{{ $request->reason }}</td>
+                    <td>{{ $request->created_at->format('Y-m-d') }}</td>
                     <td>
                         <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#requestModal{{ $request->id }}">
                             詳細
