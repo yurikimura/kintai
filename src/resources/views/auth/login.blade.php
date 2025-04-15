@@ -2,6 +2,15 @@
 
 @section('css')
 <link rel="stylesheet" href="{{ asset('css/login.css') }}">
+<style>
+    .login-form__heading h2 {
+        font-size: 32px; /* 文字サイズを大きく */
+        font-weight: bold; /* 太字にする */
+    }
+    .form__group-title label {
+        font-weight: bold; /* 太字にする */
+    }
+</style>
 @endsection
 
 @section('content')

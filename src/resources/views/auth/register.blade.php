@@ -2,6 +2,20 @@
 
 @section('css')
 <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+<style>
+    .auth-title {
+        font-size: 32px; /* 文字サイズを大きく */
+        font-weight: bold; /* 太字にする */
+    }
+    .form-group label {
+        font-weight: bold; /* 太字にする */
+    }
+    .auth-button {
+        display: block;
+        width: 100%;
+        text-align: center; /* 中央に配置 */
+    }
+</style>
 @endsection
 
 @section('content')
