@@ -12,20 +12,18 @@ class AttendanceController extends Controller
     public function list(Request $request)
     {
         $date = $request->input('date') ? Carbon::parse($request->input('date')) : Carbon::now();
-        $startOfMonth = $date->copy()->startOfMonth();
-        $endOfMonth = $date->copy()->endOfMonth();
 
+        // current_day のみの勤怠データを取得
         $attendances = Attendance::with('user')
-            ->whereBetween('date', [$startOfMonth, $endOfMonth])
-            ->orderBy('date', 'asc')
+            ->whereDate('date', $date)
             ->orderBy('user_id', 'asc')
             ->get();
 
         return view('admin.attendance.list', [
             'attendances' => $attendances,
-            'current_month' => $date->format('Y-m'),
-            'previous_month' => $date->copy()->subMonth()->format('Y-m'),
-            'next_month' => $date->copy()->addMonth()->format('Y-m'),
+            'current_day' => $date->format('Y-m-d'),
+            'previous_day' => $date->copy()->subDay()->format('Y-m-d'),
+            'next_day' => $date->copy()->addDay()->format('Y-m-d'),
         ]);
     }
 

@@ -13,33 +13,41 @@ class AttendanceSeeder extends Seeder
      */
     public function run()
     {
-        \DB::table('attendances')->insert([
-            [
+        $startDate = now()->subMonth();
+        $endDate = now();
+
+        $attendances = [];
+
+        for ($date = $startDate; $date <= $endDate; $date->addDay()) {
+            $attendances[] = [
                 'user_id' => 1,
-                'date' => now()->format('Y-m-d'),
+                'date' => $date->format('Y-m-d'),
                 'start_time' => '09:00:00',
                 'end_time' => '18:00:00',
                 'start_break_time' => '12:00:00',
                 'end_break_time' => '13:00:00',
-                'break_time' => 60,
+                'break_time' => (strtotime('end_break_time') - strtotime('start_break_time')) / 60,
                 'work_time' => 720,
                 'remarks' => '通常勤務',
                 'created_at' => now(),
                 'updated_at' => now(),
-            ],
-            [
+            ];
+
+            $attendances[] = [
                 'user_id' => 2,
-                'date' => now()->format('Y-m-d'),
+                'date' => $date->format('Y-m-d'),
                 'start_time' => '09:30:00',
                 'end_time' => '18:30:00',
                 'start_break_time' => '12:30:00',
                 'end_break_time' => '13:30:00',
-                'break_time' => 60,
+                'break_time' => (strtotime('end_break_time') - strtotime('start_break_time')) / 60,
                 'work_time' => 720,
                 'remarks' => '通常勤務',
                 'created_at' => now(),
                 'updated_at' => now(),
-            ],
-        ]);
+            ];
+        }
+
+        \DB::table('attendances')->insert($attendances);
     }
 }

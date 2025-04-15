@@ -19,15 +19,29 @@ class UserSeeder extends Seeder
                 'name' => '山田太郎',
                 'email' => 'test@example.com',
                 'password' => Hash::make('password123'),
-                'created_at' => now(),
-                'updated_at' => now(),
+                'created_at' => now()->subMonths(3),
+                'updated_at' => now()->subMonths(3),
             ],
             [
                 'name' => '佐藤花子',
                 'email' => 'test2@example.com',
                 'password' => Hash::make('password123'),
-                'created_at' => now(),
-                'updated_at' => now(),
+                'created_at' => now()->subMonths(3),
+                'updated_at' => now()->subMonths(3),
+            ],
+            [
+                'name' => '鈴木一郎',
+                'email' => 'test3@example.com',
+                'password' => Hash::make('password123'),
+                'created_at' => now()->subMonths(3),
+                'updated_at' => now()->subMonths(3),
+            ],
+            [
+                'name' => '田中美咲',
+                'email' => 'test4@example.com',
+                'password' => Hash::make('password123'),
+                'created_at' => now()->subMonths(3),
+                'updated_at' => now()->subMonths(3),
             ],
         ]);
     }

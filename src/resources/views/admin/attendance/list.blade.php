@@ -3,18 +3,17 @@
 @section('content')
 <div class="attendance-list">
     <div class="attendance-header">
-        <h2>勤怠一覧（管理者）</h2>
+        <h2>{{ \Carbon\Carbon::parse($current_day)->format('Y年n月j日') }}の勤怠</h2>
     </div>
     <div class="month-selector">
-        <a href="?date={{ $previous_month }}" class="month-link">前月</a>
-        <span class="current-month">{{ \Carbon\Carbon::parse($current_month)->format('Y/m') }}</span>
-        <a href="?date={{ $next_month }}" class="month-link">翌月</a>
+        <a href="?date={{ $previous_day }}" class="day-link">前日</a>
+        <span class="current-month">{{ \Carbon\Carbon::parse($current_day)->format('Y/m/d') }}</span>
+        <a href="?date={{ $next_day }}" class="day-link">翌日</a>
     </div>
     <div class="attendance-table">
         <table>
             <thead>
                 <tr>
-                    <th>日付</th>
                     <th>社員名</th>
                     <th>出勤</th>
                     <th>退勤</th>
@@ -26,12 +25,11 @@
             <tbody>
                 @foreach($attendances as $attendance)
                 <tr>
-                    <td>{{ $attendance->date->format('m/d') }}</td>
                     <td>{{ $attendance->user->name }}</td>
                     <td>{{ $attendance->start_time ? $attendance->start_time->format('H:i') : '-' }}</td>
                     <td>{{ $attendance->end_time ? $attendance->end_time->format('H:i') : '-' }}</td>
-                    <td>{{ $attendance->break_time }}:00</td>
-                    <td>{{ $attendance->work_time }}:00</td>
+                    <td>{{ $attendance->break_time }}</td>
+                    <td>{{ $attendance->work_time }}</td>
                     <td>
                         <a href="{{ route('admin.attendance.show', ['id' => $attendance->id]) }}" class="detail-link">詳細</a>
                     </td>
@@ -69,7 +67,7 @@
     margin: 30px 0;
 }
 
-.month-link {
+.day-link {
     text-decoration: none;
     color: #000;
     font-weight: bold;
