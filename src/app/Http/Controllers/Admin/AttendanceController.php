@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Attendance;
 use Carbon\Carbon;
+use App\Models\User;
 
 class AttendanceController extends Controller
 {
@@ -31,6 +32,19 @@ class AttendanceController extends Controller
     {
         $attendance = Attendance::with('user')->findOrFail($id);
         return view('admin.attendance.show', compact('attendance'));
+    }
+
+    public function staff($id)
+    {
+        $staff = User::findOrFail($id);
+        $attendances = Attendance::where('user_id', $id)
+            ->orderBy('date', 'asc')
+            ->get();
+
+        return view('admin.attendance.staff', [
+            'staff' => $staff,
+            'attendances' => $attendances,
+        ]);
     }
 
     private function calculateTotalTime($attendance)

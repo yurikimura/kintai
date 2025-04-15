@@ -1,28 +1,26 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-8">スタッフ一覧</h1>
-
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-        <table class="min-w-full">
-            <thead class="bg-gray-50">
+<div class="staff-list-container">
+    <div class="staff-list-header">
+        <h2>スタッフ一覧</h2>
+    </div>
+    <div class="staff-table-wrapper">
+        <table class="staff-table">
+            <thead>
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">名前</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">メールアドレス</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">月次勤怠</th>
+                    <th>名前</th>
+                    <th>メールアドレス</th>
+                    <th>月次勤怠</th>
                 </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
+            <tbody>
                 @foreach($users as $user)
                 <tr>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ $user->name }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ $user->email }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <a href="{{ route('admin.attendance.show', $user->id) }}"
-                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            詳細
-                        </a>
+                    <td>{{ $user->name }}</td>
+                    <td>{{ $user->email }}</td>
+                    <td>
+                        <a href="{{ route('admin.attendance.show', ['id' => $user->id]) }}" class="detail-link">詳細</a>
                     </td>
                 </tr>
                 @endforeach
@@ -30,4 +28,68 @@
         </table>
     </div>
 </div>
+
+<style>
+.staff-list-container {
+    max-width: 800px;
+    margin: 60px auto;
+    padding: 0 20px;
+}
+
+.staff-list-header {
+    border-left: 4px solid #000;
+    padding-left: 12px;
+    margin-bottom: 30px;
+}
+
+.staff-list-header h2 {
+    font-size: 22px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.staff-table-wrapper {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.staff-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.staff-table th,
+.staff-table td {
+    padding: 16px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+}
+
+.staff-table th {
+    background-color: #f9f9f9;
+    color: #333;
+    font-weight: 500;
+}
+
+.staff-table td {
+    color: #333;
+}
+
+.staff-table tr:last-child td {
+    border-bottom: none;
+}
+
+.detail-link {
+    color: #333;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.detail-link:hover {
+    text-decoration: underline;
+}
+</style>
 @endsection
