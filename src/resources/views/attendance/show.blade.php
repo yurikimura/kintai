@@ -38,7 +38,7 @@
 
             <div class="form-group">
                 <label>備考</label>
-                <textarea class="note-box" name="note" rows="4">{{ $attendance->remarks }}</textarea>
+                <textarea class="note-box" name="remarks" rows="4">{{ $attendance->remarks }}</textarea>
             </div>
         </div>
         <div class="form-actions">

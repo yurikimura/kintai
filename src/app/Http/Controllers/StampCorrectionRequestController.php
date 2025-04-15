@@ -44,9 +44,10 @@ class StampCorrectionRequestController extends Controller
     public function list()
     {
         $requests = StampCorrectionRequest::where('user_id', auth()->id())
-            ->with('attendance')
+            ->with('attendances')
             ->orderBy('created_at', 'desc')
             ->get();
+var_dump(auth()->id());
 
         return view('stamp_correction_request.list', compact('requests'));
     }

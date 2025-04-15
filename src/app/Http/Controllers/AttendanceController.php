@@ -48,7 +48,7 @@ class AttendanceController extends Controller
             'end_time' => 'nullable|date_format:H:i',
             'start_break_time' => 'nullable|date_format:H:i',
             'end_break_time' => 'nullable|date_format:H:i',
-            'note' => 'nullable|string|max:1000',
+            'remarks' => 'nullable|string|max:1000',
         ]);
 
         $attendance->update([
@@ -56,7 +56,7 @@ class AttendanceController extends Controller
             'end_time' => $request->end_time ? Carbon::parse($request->end_time) : null,
             'start_break_time' => $request->start_break_time ? Carbon::parse($request->start_break_time) : null,
             'end_break_time' => $request->end_break_time ? Carbon::parse($request->end_break_time) : null,
-            'note' => $request->note,
+            'remarks' => $request->remarks,
         ]);
 
         return redirect()->route('attendance.show', $id)
