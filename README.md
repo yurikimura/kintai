@@ -27,12 +27,6 @@ DB_PASSWORD=laravel_pass
 docker compose exec php php artisan migrate:fresh --seed
 ```
 
-#### seedを追加
-```
-docker compose exec php php artisan db:seed --class=UserSeeder
-docker compose exec php php artisan db:seed --class=ItemSeeder
-```
-
 ### 停止
 ```
 docker compose down --remove-orphans
@@ -64,4 +58,5 @@ docker compose exec php php artisan config:cache
 
 
 - ホーム画面 http://localhost/
+- Adminログイン http://localhost/admin/login
 - phpMyAdmin : http://localhost:8080/
