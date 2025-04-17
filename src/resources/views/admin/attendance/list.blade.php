@@ -6,9 +6,9 @@
         <h2>{{ \Carbon\Carbon::parse($current_day)->format('Y年n月j日') }}の勤怠</h2>
     </div>
     <div class="month-selector">
-        <a href="?date={{ $previous_day }}" class="day-link">前日</a>
+        <a href="?date={{ $previous_day }}@if(request()->has('user_id'))&user_id={{ request()->input('user_id') }}@endif" class="day-link">前日</a>
         <span class="current-month">{{ \Carbon\Carbon::parse($current_day)->format('Y/m/d') }}</span>
-        <a href="?date={{ $next_day }}" class="day-link">翌日</a>
+        <a href="?date={{ $next_day }}@if(request()->has('user_id'))&user_id={{ request()->input('user_id') }}@endif" class="day-link">翌日</a>
     </div>
     <div class="attendance-table">
         <table>

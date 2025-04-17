@@ -13,12 +13,21 @@ class AttendanceController extends Controller
     public function list(Request $request)
     {
         $date = $request->input('date') ? Carbon::parse($request->input('date')) : Carbon::now();
+        $user_id = $request->input('user_id');
 
+        if ($user_id) {
         // current_day のみの勤怠データを取得
         $attendances = Attendance::with('user')
-            ->whereDate('date', $date)
-            ->orderBy('user_id', 'asc')
-            ->get();
+                ->whereDate('date', $date)
+                ->orderBy('user_id', 'asc')
+                ->get();
+        } else {
+            // current_day のみの勤怠データを取得
+            $attendances = Attendance::with('user')
+                ->whereDate('date', $date)
+                ->orderBy('user_id', 'asc')
+                ->get();
+        }
 
         return view('admin.attendance.list', [
             'attendances' => $attendances,

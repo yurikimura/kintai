@@ -126,37 +126,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // 1分ごとに更新
     setInterval(updateDateTime, 60000);
 
-    // 現在の勤怠状態を取得してUIを更新
-    fetch('/attendance/status')
-        .then(response => response.json())
-        .then(data => {
-            switch (data.status) {
-                case 'working':
-                    startWorkBtn.classList.add('hidden');
-                    endWorkBtn.classList.remove('hidden');
-                    startBreakBtn.classList.remove('hidden');
-                    statusBadge.textContent = '出勤中';
-                    break;
-                case 'on_break':
-                    startWorkBtn.classList.add('hidden');
-                    endWorkBtn.classList.add('hidden');
-                    startBreakBtn.classList.add('hidden');
-                    endBreakBtn.classList.remove('hidden');
-                    statusBadge.textContent = '休憩中';
-                    break;
-                case 'not_working':
-                    startWorkBtn.classList.remove('hidden');
-                    endWorkBtn.classList.add('hidden');
-                    startBreakBtn.classList.add('hidden');
-                    endBreakBtn.classList.add('hidden');
-                    statusBadge.textContent = '勤務外';
-                    break;
-            }
-        })
-        .catch(error => {
-            console.error('勤怠状態の取得中にエラーが発生しました:', error);
-        });
-
     startWorkBtn.addEventListener('click', function() {
         fetch('/attendance', {
             method: 'POST',

@@ -57,6 +57,7 @@ class AttendanceController extends Controller
             'end_time' => $request->end_time ? Carbon::parse($request->end_time) : null,
             'start_break_time' => $request->start_break_time ? Carbon::parse($request->start_break_time) : null,
             'end_break_time' => $request->end_break_time ? Carbon::parse($request->end_break_time) : null,
+            'status' => 'pending',
             'remarks' => $request->remarks,
         ]);
 
