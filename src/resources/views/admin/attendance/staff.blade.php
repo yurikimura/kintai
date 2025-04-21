@@ -2,10 +2,18 @@
 
 @section('content')
 <div class="attendance-list-container">
-    <h2 class="list-title">{{ $staff->name }}さんの勤怠</h2>
-    <table class="attendance-table">
-        <thead>
-            <tr>
+    <div class="attendance-list-header">
+        <h2>{{ $staff->name }}さんの勤怠</h2>
+    </div>
+    <div class="month-selector">
+        <a href="{{ route('admin.attendance.staff', ['id' => $staff->id, 'month' => $previous_month]) }}" class="month-link">← 前月</a>
+        <span class="current-month">{{ Carbon\Carbon::parse($current_month)->format('Y年m月') }}</span>
+        <a href="{{ route('admin.attendance.staff', ['id' => $staff->id, 'month' => $next_month]) }}" class="month-link">次月 →</a>
+    </div>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
                 <th>日付</th>
                 <th>出勤</th>
                 <th>退勤</th>
@@ -17,20 +25,21 @@
         <tbody>
             @foreach ($attendances as $attendance)
             <tr>
-                <td>{{ $attendance->date->format('m/d (D)') }}</td>
+                <td>{{ $attendance->date->format('m/d') }} ({{ $attendance->date->isoFormat('ddd') }})</td>
                 <td>{{ $attendance->start_time->format('H:i') }}</td>
                 <td>{{ $attendance->end_time->format('H:i') }}</td>
-                <td>{{ $attendance->break_time }}時間</td>
-                <td>{{ $attendance->total_time }}時間</td>
-                <td><a href="{{ route('attendance.show', $attendance->id) }}">詳細</a></td>
+                <td>{{ floor($attendance->break_time / 60) }}:{{ str_pad($attendance->break_time % 60, 2, '0', STR_PAD_LEFT) }}</td>
+                <td>{{ floor($attendance->work_time / 60) }}:{{ str_pad($attendance->work_time % 60, 2, '0', STR_PAD_LEFT) }}</td>
+                <td><a href="{{ route('admin.attendance.show', $attendance->id) }}" class="detail-link">詳細</a></td>
             </tr>
             @endforeach
         </tbody>
-    </table>
+        </table>
+    </div>
 </div>
 
 <style>
-.attendance-list-container {
+/* .attendance-list-container {
     max-width: 1000px;
     margin: 0 auto;
     padding: 20px;
@@ -68,6 +77,6 @@
 
 .attendance-table a:hover {
     text-decoration: underline;
-}
+} */
 </style>
 @endsection

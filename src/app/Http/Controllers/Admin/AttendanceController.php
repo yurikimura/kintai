@@ -43,17 +43,36 @@ class AttendanceController extends Controller
         return view('admin.attendance.show', compact('attendance'));
     }
 
-    public function staff($id)
+    public function staff($id, Request $request)
     {
         $staff = User::findOrFail($id);
+
+        // 月の指定がある場合はその月のデータを取得、ない場合は現在の月のデータを取得
+        $month = $request->input('month') ? Carbon::parse($request->input('month')) : Carbon::now();
+        $startOfMonth = $month->copy()->startOfMonth();
+        $endOfMonth = $month->copy()->endOfMonth();
+
         $attendances = Attendance::where('user_id', $id)
+            ->whereBetween('date', [$startOfMonth, $endOfMonth])
             ->orderBy('date', 'asc')
             ->get();
 
         return view('admin.attendance.staff', [
             'staff' => $staff,
             'attendances' => $attendances,
+            'current_month' => $month->format('Y-m'),
+            'previous_month' => $month->copy()->subMonth()->format('Y-m'),
+            'next_month' => $month->copy()->addMonth()->format('Y-m'),
         ]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $attendance = Attendance::findOrFail($id);
+        $attendance->update([
+            'status' => 'approved',
+        ]);
+        return redirect()->route('admin.attendance.show', $id);
     }
 
     private function calculateTotalTime($attendance)
