@@ -37,11 +37,6 @@
                 <div class="form-value">{!! nl2br(e($attendance->remarks)) !!}</div>
             </div>
         </div>
-        <div class="form-actions">
-            @if($attendance->status === 'pending')
-                <button type="submit" class="edit-button">承認</button>
-            @endif
-        </div>
     </form>
 </div>
 
