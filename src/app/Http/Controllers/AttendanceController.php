@@ -49,8 +49,43 @@ class AttendanceController extends Controller
             'end_time' => 'nullable|date_format:H:i',
             'start_break_time' => 'nullable|date_format:H:i',
             'end_break_time' => 'nullable|date_format:H:i',
-            'remarks' => 'nullable|string|max:1000',
+            'remarks' => 'required|string|max:1000',
+        ], [
+            'remarks.required' => '備考を記入してください',
         ]);
+
+        // 出勤時間と退勤時間の整合性チェック
+        if ($request->filled('start_time') && $request->filled('end_time')) {
+            $start = Carbon::parse($request->start_time);
+            $end = Carbon::parse($request->end_time);
+            if ($start->gt($end)) {
+                return back()->withErrors(['start_time' => '出勤時間もしくは退勤時間が不適切な値です'])->withInput();
+            }
+        }
+        // 休憩開始時間が退勤時間より後の場合も同じバリデーション
+        if ($request->filled('start_break_time') && $request->filled('end_time')) {
+            $start_break = Carbon::parse($request->start_break_time);
+            $end = Carbon::parse($request->end_time);
+            if ($start_break->gt($end)) {
+                return back()->withErrors(['start_break_time' => '出勤時間もしくは退勤時間が不適切な値です'])->withInput();
+            }
+        }
+        // 休憩終了時間が退勤時間より後の場合も同じバリデーション
+        if ($request->filled('end_break_time') && $request->filled('end_time')) {
+            $end_break = Carbon::parse($request->end_break_time);
+            $end = Carbon::parse($request->end_time);
+            if ($end_break->gt($end)) {
+                return back()->withErrors(['end_break_time' => '出勤時間もしくは退勤時間が不適切な値です'])->withInput();
+            }
+        }
+        // 休憩開始時間が休憩終了時間より遅い場合のバリデーション
+        if ($request->filled('start_break_time') && $request->filled('end_break_time')) {
+            $start_break = Carbon::parse($request->start_break_time);
+            $end_break = Carbon::parse($request->end_break_time);
+            if ($start_break->gt($end_break)) {
+                return back()->withErrors(['start_break_time' => '休憩開始時間もしくは休憩終了時間が不適切な値です'])->withInput();
+            }
+        }
 
         $attendance->update([
             'start_time' => $request->start_time ? Carbon::parse($request->start_time) : null,

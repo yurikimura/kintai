@@ -63,4 +63,25 @@ class StampCorrectionRequestController extends Controller
 
         return view('stamp_correction_request.list', compact('requests', 'status'));
     }
+
+    public function approve($id)
+    {
+        $stampCorrectionRequest = StampCorrectionRequest::findOrFail($id);
+
+        // 勤怠データを更新
+        $attendance = Attendance::findOrFail($stampCorrectionRequest->attendance_id);
+        if ($stampCorrectionRequest->request_type === 'start_time') {
+            $attendance->start_time = $stampCorrectionRequest->request_time;
+        } else {
+            $attendance->end_time = $stampCorrectionRequest->request_time;
+        }
+        $attendance->status = 'approved';
+        $attendance->save();
+
+        // 申請のステータスを更新
+        $stampCorrectionRequest->status = 'approved';
+        $stampCorrectionRequest->save();
+
+        return redirect()->back()->with('success', '申請が承認されました。');
+    }
 }
