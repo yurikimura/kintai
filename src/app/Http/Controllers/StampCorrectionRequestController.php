@@ -6,18 +6,12 @@ use App\Models\StampCorrectionRequest;
 use App\Models\Attendance;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use App\Http\Requests\StampCorrectionRequestStoreRequest;
 
 class StampCorrectionRequestController extends Controller
 {
-    public function store(Request $request)
+    public function store(StampCorrectionRequestStoreRequest $request)
     {
-        $request->validate([
-            'attendance_id' => 'required|exists:attendances,id',
-            'request_type' => 'required|in:start_time,end_time',
-            'request_time' => 'required|date',
-            'reason' => 'required|string|max:1000',
-        ]);
-
         $attendance = Attendance::findOrFail($request->attendance_id);
 
         // 現在の時間を取得

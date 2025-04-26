@@ -7,6 +7,7 @@ use App\Models\Attendance;
 use App\Models\StampCorrectionRequest;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Http\Requests\AttendanceUpdateRequest;
 
 class AttendanceController extends Controller
 {
@@ -40,19 +41,9 @@ class AttendanceController extends Controller
         return view('attendance.show', compact('attendance'));
     }
 
-    public function update(Request $request, $id)
+    public function update(AttendanceUpdateRequest $request, $id)
     {
         $attendance = Attendance::where('user_id', auth()->id())->findOrFail($id);
-
-        $request->validate([
-            'start_time' => 'nullable|date_format:H:i',
-            'end_time' => 'nullable|date_format:H:i',
-            'start_break_time' => 'nullable|date_format:H:i',
-            'end_break_time' => 'nullable|date_format:H:i',
-            'remarks' => 'required|string|max:1000',
-        ], [
-            'remarks.required' => '備考を記入してください',
-        ]);
 
         // 出勤時間と退勤時間の整合性チェック
         if ($request->filled('start_time') && $request->filled('end_time')) {
