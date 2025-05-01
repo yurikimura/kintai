@@ -5,11 +5,17 @@
     <div class="attendance-header">
         <h2>勤怠一覧</h2>
     </div>
-    <div class="month-selector">
-        <a href="?date={{ $previous_month }}" class="month-link">前月</a>
-        <span class="current-month">{{ \Carbon\Carbon::parse($current_month)->format('Y/m') }}</span>
-        <a href="?date={{ $next_month }}" class="month-link">翌月</a>
-    </div>
+        <div class="month-selector">
+            <div id="first-div">
+                <a href="?date={{ $previous_month }}" class="month-link">前月</a>
+            </div>
+            <div id="second-div">
+                <span class="current-month">{{ \Carbon\Carbon::parse($current_month)->format('Y/m') }}</span>
+            </div>
+            <div id="third-div">
+                <a href="?date={{ $next_month }}" class="month-link">翌月</a>
+            </div>
+        </div>
     <div class="attendance-table">
         <table>
             <thead>

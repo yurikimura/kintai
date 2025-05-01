@@ -22,4 +22,10 @@ body {
 
 main {
     padding: 20px;
+    background-color: #F0EFF2;
+}
+
+tr {
+    background-color: #fff;
+    border: 1px solid #fff;
 }
