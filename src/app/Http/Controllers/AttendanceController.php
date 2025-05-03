@@ -13,7 +13,19 @@ class AttendanceController extends Controller
 {
     public function index()
     {
-        return view('attendance.index');
+        $now = Carbon::now();
+        $days = ['日', '月', '火', '水', '木', '金', '土'];
+
+        $dateTime = [
+            'year' => $now->year,
+            'month' => $now->month,
+            'date' => $now->day,
+            'day' => $days[$now->dayOfWeek],
+            'hours' => $now->format('H'),
+            'minutes' => $now->format('i')
+        ];
+
+        return view('attendance.index', compact('dateTime'));
     }
 
     public function list(Request $request)

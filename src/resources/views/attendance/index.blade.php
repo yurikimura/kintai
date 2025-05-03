@@ -76,8 +76,8 @@
 <div class="attendance-container">
     <div class="attendance-content">
         <div class="status-badge">勤務外</div>
-        <div class="date-display" id="currentDate"></div>
-        <div class="time-display" id="currentTime"></div>
+        <div class="date-display" id="currentDate">{{ $dateTime['year'] }}年{{ $dateTime['month'] }}月{{ $dateTime['date'] }}日({{ $dateTime['day'] }})</div>
+        <div class="time-display" id="currentTime">{{ $dateTime['hours'] }}:{{ $dateTime['minutes'] }}</div>
         <div class="button-container">
             <button class="attendance-button" id="startWork">出勤</button>
             <button class="attendance-button hidden" id="endWork">退勤</button>
@@ -106,24 +106,16 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateDateTime() {
         const now = new Date();
 
-        // 日付の更新
-        const days = ['日', '月', '火', '水', '木', '金', '土'];
-        const year = now.getFullYear();
-        const month = now.getMonth() + 1;
-        const date = now.getDate();
-        const day = days[now.getDay()];
-        dateDisplay.textContent = `${year}年${month}月${date}日(${day})`;
-
         // 時刻の更新
         const hours = String(now.getHours()).padStart(2, '0');
         const minutes = String(now.getMinutes()).padStart(2, '0');
         timeDisplay.textContent = `${hours}:${minutes}`;
     }
 
-    // 初回実行
+    // ページロード時に実行
     updateDateTime();
 
-    // 1分ごとに更新
+    // 1分ごとに時刻を更新
     setInterval(updateDateTime, 60000);
 
     startWorkBtn.addEventListener('click', function() {
