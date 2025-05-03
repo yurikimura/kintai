@@ -130,6 +130,7 @@ class AttendanceController extends Controller
             'user_id' => $user->id,
             'date' => $now->format('Y-m-d'),
             'start_time' => $now,
+            'working_status' => 'working',
         ]);
 
         return response()->json([
@@ -154,7 +155,8 @@ class AttendanceController extends Controller
         }
 
         $attendance->update([
-            'start_break_time' => $now
+            'start_break_time' => $now,
+            'working_status' => 'on_break'
         ]);
 
         return response()->json([
@@ -186,7 +188,8 @@ class AttendanceController extends Controller
 
         $attendance->update([
             'end_break_time' => $now,
-            'break_time' => $attendance->break_time + $breakTime
+            'break_time' => $attendance->break_time + $breakTime,
+            'working_status' => 'working'
         ]);
 
         return response()->json([
@@ -211,7 +214,8 @@ class AttendanceController extends Controller
         }
 
         $attendance->update([
-            'end_time' => $now
+            'end_time' => $now,
+            'working_status' => 'off'
         ]);
 
         return response()->json([
@@ -235,10 +239,6 @@ class AttendanceController extends Controller
             return response()->json(['status' => 'not_working']);
         }
 
-        if ($attendance->break_start_time && !$attendance->break_end_time) {
-            return response()->json(['status' => 'on_break']);
-        }
-
-        return response()->json(['status' => 'working']);
+        return response()->json(['status' => $attendance->working_status]);
     }
 }

@@ -118,6 +118,54 @@ document.addEventListener('DOMContentLoaded', function() {
     // 1分ごとに時刻を更新
     setInterval(updateDateTime, 60000);
 
+    // ページロード時に現在の勤怠状態を取得
+    function checkCurrentStatus() {
+        fetch('/attendance/status', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': token
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('現在の勤怠状態:', data.status);
+            updateUIByStatus(data.status);
+        })
+        .catch(error => {
+            console.error('勤怠状態の取得中にエラーが発生しました:', error);
+        });
+    }
+
+    function updateUIByStatus(status) {
+        // すべてのボタンを一旦非表示に
+        startWorkBtn.classList.add('hidden');
+        endWorkBtn.classList.add('hidden');
+        startBreakBtn.classList.add('hidden');
+        endBreakBtn.classList.add('hidden');
+
+        switch(status) {
+            case 'working':
+                endWorkBtn.classList.remove('hidden');
+                startBreakBtn.classList.remove('hidden');
+                statusBadge.textContent = '出勤中';
+                break;
+            case 'on_break':
+                endBreakBtn.classList.remove('hidden');
+                statusBadge.textContent = '休憩中';
+                break;
+            case 'off':
+            case 'not_working':
+            default:
+                startWorkBtn.classList.remove('hidden');
+                statusBadge.textContent = '勤務外';
+                break;
+        }
+    }
+
+    // ページロード時に状態を確認して適切なUIを表示
+    checkCurrentStatus();
+
     startWorkBtn.addEventListener('click', function() {
         fetch('/attendance', {
             method: 'POST',
@@ -134,10 +182,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(data => {
             console.log('出勤記録が完了しました:', data);
-            startWorkBtn.classList.add('hidden');
-            endWorkBtn.classList.remove('hidden');
-            startBreakBtn.classList.remove('hidden');
-            statusBadge.textContent = '出勤中';
+            updateUIByStatus('working');
         })
         .catch(error => {
             console.error('出勤記録中にエラーが発生しました:', error);
@@ -161,10 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(data => {
             console.log('退勤記録の詳細:', data);
-            endWorkBtn.classList.add('hidden');
-            startBreakBtn.classList.add('hidden');
-            endBreakBtn.classList.add('hidden');
-            statusBadge.textContent = '勤務外';
+            updateUIByStatus('off');
 
             thankYouMessage.classList.remove('hidden');
             setTimeout(() => {
@@ -188,10 +230,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             console.log('休憩開始を記録しました:', data);
-            startBreakBtn.classList.add('hidden');
-            endWorkBtn.classList.add('hidden');
-            endBreakBtn.classList.remove('hidden');
-            statusBadge.textContent = '休憩中';
+            updateUIByStatus('on_break');
         })
         .catch(error => {
             console.error('休憩開始の記録中にエラーが発生しました:', error);
@@ -210,10 +249,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             console.log('休憩終了を記録しました:', data);
-            endBreakBtn.classList.add('hidden');
-            endWorkBtn.classList.remove('hidden');
-            startBreakBtn.classList.remove('hidden');
-            statusBadge.textContent = '出勤中';
+            updateUIByStatus('working');
         })
         .catch(error => {
             console.error('休憩終了の記録中にエラーが発生しました:', error);
