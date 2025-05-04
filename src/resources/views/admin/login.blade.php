@@ -1,5 +1,7 @@
 @extends('layouts.admin')
 
+@section('body_class', 'admin-login-page')
+
 @section('css')
 <link rel="stylesheet" href="{{ asset('css/login.css') }}">
 <style>

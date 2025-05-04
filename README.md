@@ -48,6 +48,11 @@ docker compose exec php php artisan config:cache
 docker compose exec php php artisan config:cache
 ```
 
+### テストを実行
+```
+docker compose exec php php artisan test
+```
+
 ## 使用技術(実行環境)
 - PHP 7.4.9
 - Laravel 8.83.8

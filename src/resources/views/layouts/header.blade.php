@@ -34,7 +34,7 @@
         }
     </style>
 </head>
-<body>
+<body class="@yield('body_class')">
     <header class="header">
         <div class="header__inner">
             <a href="/attendance">

@@ -12,11 +12,11 @@
 .login-form {
     margin: 40px auto 0;
     width: 100%;
-    max-width: 500px;
+    max-width: 45%;
 }
 
 .form__group {
-    margin-bottom: 25px;
+    margin-bottom: 10%;
 }
 
 .form__group-title {
@@ -38,7 +38,7 @@
 }
 
 .form__button {
-    margin-top: 30px;
+    margin-top: 15%;
 }
 
 .form__button-submit {

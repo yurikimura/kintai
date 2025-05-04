@@ -19,10 +19,24 @@ class AttendanceDateTest extends TestCase
         $user = \App\Models\User::factory()->create();
         $this->actingAs($user);
 
+        // テスト実行時の時刻をCarbonで固定
+        $now = Carbon::now();
+        Carbon::setTestNow($now);
+
         $response = $this->get('/attendance');
 
-        $currentDate = Carbon::now()->format('Y年m月d日');
+        // 日付の確認
+        $currentDate = $now->format('Y年m月d日');
         $response->assertSee($currentDate);
+
+        // 時間と分の確認
+        $currentHour = $now->format('H');
+        $currentMinute = $now->format('i');
+        $response->assertSee($currentHour);
+        $response->assertSee($currentMinute);
+
+        // テスト後、固定した時刻を元に戻す
+        Carbon::setTestNow(null);
     }
 
     /**

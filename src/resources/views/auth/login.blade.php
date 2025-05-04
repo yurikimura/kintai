@@ -1,5 +1,7 @@
 @extends('layouts.header')
 
+@section('body_class', 'login-page')
+
 @section('css')
 <link rel="stylesheet" href="{{ asset('css/login.css') }}">
 <style>
