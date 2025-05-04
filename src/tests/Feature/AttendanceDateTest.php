@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Carbon\Carbon;
+use App\Models\User;
+use App\Models\Attendance;
 
 class AttendanceDateTest extends TestCase
 {
@@ -26,7 +28,7 @@ class AttendanceDateTest extends TestCase
         $response = $this->get('/attendance');
 
         // 日付の確認
-        $currentDate = $now->format('Y年m月d日');
+        $currentDate = $now->format('Y年n月j日') . '(' . ['日', '月', '火', '水', '木', '金', '土'][$now->dayOfWeek] . ')';
         $response->assertSee($currentDate);
 
         // 時間と分の確認
@@ -68,6 +70,7 @@ class AttendanceDateTest extends TestCase
             'end_time' => null,
             'start_break_time' => null,
             'end_break_time' => null,
+            'working_status' => 'working',
         ]);
 
         $response = $this->get('/attendance');
@@ -139,22 +142,23 @@ class AttendanceDateTest extends TestCase
      */
     public function test_attendance_page_does_not_show_clock_in_button_when_status_is_left_work()
     {
-        $user = \App\Models\User::factory()->create();
+        $user = User::factory()->create();
         $this->actingAs($user);
 
-        // 退勤済の出勤レコードを作成
-        \App\Models\Attendance::factory()->create([
+        Attendance::factory()->create([
             'user_id' => $user->id,
             'date' => now()->format('Y-m-d'),
             'start_time' => now()->subHours(8)->format('H:i:s'),
             'end_time' => now()->format('H:i:s'),
             'start_break_time' => null,
             'end_break_time' => null,
+            'working_status' => 'off'
         ]);
 
         $response = $this->get('/attendance');
 
-        $response->assertDontSee('出勤');
+        $response->assertDontSee('<button class="attendance-button" id="startWork">出勤</button>', false);
+        $response->assertSee('class="attendance-button hidden" id="startWork"', false);
     }
 
     /**
@@ -179,11 +183,12 @@ class AttendanceDateTest extends TestCase
         $response = $this->get('/attendance');
         $response->assertSee('退勤');
 
-        // 退勤ボタンを押す（POSTリクエストを想定。ルートやパラメータは実装に合わせて調整してください）
-        $response = $this->post('/attendance/clock-out', [
-            'attendance_id' => $attendance->id,
-        ]);
-        $response->assertRedirect('/attendance');
+        // 退勤ボタンを押す
+        $response = $this->post('/attendance/end');
+        $response->assertStatus(200)
+            ->assertJson([
+                'message' => '退勤を記録しました'
+            ]);
 
         // 再度画面を取得し、ステータスが「退勤済」になっていることを確認
         $response = $this->get('/attendance');
@@ -198,9 +203,12 @@ class AttendanceDateTest extends TestCase
         $user = \App\Models\User::factory()->create();
         $this->actingAs($user);
 
-        // 出勤ボタンを押す（POSTリクエストを想定）
-        $response = $this->post('/attendance/clock-in');
-        $response->assertRedirect('/attendance');
+        // 出勤ボタンを押す
+        $response = $this->post('/attendance');
+        $response->assertStatus(200)
+            ->assertJson([
+                'message' => '出勤を記録しました'
+            ]);
 
         // 出勤レコードを取得
         $attendance = \App\Models\Attendance::where('user_id', $user->id)
@@ -210,11 +218,12 @@ class AttendanceDateTest extends TestCase
         $this->assertNotNull($attendance->start_time);
         $this->assertNull($attendance->end_time);
 
-        // 退勤ボタンを押す（POSTリクエストを想定）
-        $response = $this->post('/attendance/clock-out', [
-            'attendance_id' => $attendance->id,
-        ]);
-        $response->assertRedirect('/attendance');
+        // 退勤ボタンを押す
+        $response = $this->post('/attendance/end');
+        $response->assertStatus(200)
+            ->assertJson([
+                'message' => '退勤を記録しました'
+            ]);
 
         // DBの退勤時刻が現在時刻とほぼ一致していることを確認
         $attendance->refresh();
@@ -247,9 +256,8 @@ class AttendanceDateTest extends TestCase
         $user = \App\Models\User::factory()->create();
         $this->actingAs($user);
 
-        // 「前月」ボタン押下を想定し、クエリパラメータで前月を指定
         $previousMonth = Carbon::now()->subMonth();
-        $response = $this->get('/attendance/list?month=' . $previousMonth->format('Y-m'));
+        $response = $this->get('/attendance/list?date=' . $previousMonth->format('Y-m'));
 
         $expected = $previousMonth->format('Y年m月');
         $response->assertSee($expected);
@@ -263,9 +271,8 @@ class AttendanceDateTest extends TestCase
         $user = \App\Models\User::factory()->create();
         $this->actingAs($user);
 
-        // 「翌月」ボタン押下を想定し、クエリパラメータで翌月を指定
         $nextMonth = Carbon::now()->addMonth();
-        $response = $this->get('/attendance/list?month=' . $nextMonth->format('Y-m'));
+        $response = $this->get('/attendance/list?date=' . $nextMonth->format('Y-m'));
 
         $expected = $nextMonth->format('Y年m月');
         $response->assertSee($expected);

@@ -10,7 +10,7 @@
                 <a href="?date={{ $previous_month }}" class="month-link">前月</a>
             </div>
             <div id="second-div">
-                <span class="current-month">{{ \Carbon\Carbon::parse($current_month)->format('Y/m') }}</span>
+                <span class="current-month">{{ \Carbon\Carbon::parse($current_month)->format('Y年m月') }}</span>
             </div>
             <div id="third-div">
                 <a href="?date={{ $next_month }}" class="month-link">翌月</a>

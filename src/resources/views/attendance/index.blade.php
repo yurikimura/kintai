@@ -75,14 +75,24 @@
 @csrf
 <div class="attendance-container">
     <div class="attendance-content">
-        <div class="status-badge">勤務外</div>
+        <div class="status-badge">
+            @if($attendance && $attendance->working_status === 'working')
+                出勤中
+            @elseif($attendance && $attendance->working_status === 'on_break')
+                休憩中
+            @elseif($attendance && $attendance->working_status === 'off')
+                退勤済
+            @else
+                勤務外
+            @endif
+        </div>
         <div class="date-display" id="currentDate">{{ $dateTime['year'] }}年{{ $dateTime['month'] }}月{{ $dateTime['date'] }}日({{ $dateTime['day'] }})</div>
         <div class="time-display" id="currentTime">{{ $dateTime['hours'] }}:{{ $dateTime['minutes'] }}</div>
         <div class="button-container">
-            <button class="attendance-button" id="startWork">出勤</button>
-            <button class="attendance-button hidden" id="endWork">退勤</button>
-            <button class="break-button hidden" id="startBreak">休憩入</button>
-            <button class="break-return-button hidden" id="endBreak">休憩戻</button>
+            <button class="attendance-button {{ !$attendance || $attendance->working_status === 'not_working' ? '' : 'hidden' }}" id="startWork">出勤</button>
+            <button class="attendance-button {{ $attendance && $attendance->working_status === 'working' ? '' : 'hidden' }}" id="endWork">退勤</button>
+            <button class="break-button {{ $attendance && $attendance->working_status === 'working' ? '' : 'hidden' }}" id="startBreak">休憩入</button>
+            <button class="break-return-button {{ $attendance && $attendance->working_status === 'on_break' ? '' : 'hidden' }}" id="endBreak">休憩戻</button>
         </div>
         <div class="thank-you-message hidden" id="thankYouMessage">
             お疲れ様でした。
@@ -127,7 +137,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 'X-CSRF-TOKEN': token
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('ステータスコード: ' + response.status);
+            }
+            return response.json();
+        })
         .then(data => {
             console.log('現在の勤怠状態:', data.status);
             updateUIByStatus(data.status);
@@ -155,6 +170,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 statusBadge.textContent = '休憩中';
                 break;
             case 'off':
+                statusBadge.textContent = '退勤済';
+                // 退勤済みの場合は出勤ボタンを表示しない
+                break;
             case 'not_working':
             default:
                 startWorkBtn.classList.remove('hidden');
@@ -183,10 +201,14 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             console.log('出勤記録が完了しました:', data);
             updateUIByStatus('working');
+            // 成功メッセージを表示
+            alert(data.message || '出勤を記録しました');
+            // ページをリロード
+            window.location.reload();
         })
         .catch(error => {
             console.error('出勤記録中にエラーが発生しました:', error);
-            alert(error.message || '出勤記録に失敗しました。もう一度お試しください。');
+            alert(error.error || '出勤記録に失敗しました。もう一度お試しください。');
         });
     });
 
@@ -212,10 +234,15 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 thankYouMessage.classList.add('show');
             }, 100);
+
+            // 成功メッセージを表示
+            alert(data.message || '退勤を記録しました');
+            // ページをリロード
+            window.location.reload();
         })
         .catch(error => {
             console.error('退勤記録中にエラーが発生しました:', error);
-            alert('退勤記録に失敗しました: ' + (error.error || '不明なエラー'));
+            alert(error.error || '退勤記録に失敗しました。もう一度お試しください。');
         });
     });
 

@@ -4,7 +4,7 @@
 <div class="attendance-detail-container">
     <h2 class="detail-title">勤怠詳細</h2>
 
-    <form action="{{ route('attendance.update', $attendance->id) }}" method="POST">
+    <form action="{{ route('admin.stamp-correction-requests.approve', $attendance->id) }}" method="POST">
         @csrf
         @method('PUT')
         <div class="attendance-card">
@@ -36,6 +36,11 @@
                 <label>備考</label>
                 <div class="form-value">{!! nl2br(e($attendance->remarks)) !!}</div>
             </div>
+        </div>
+        <div class="form-actions">
+            @if($attendance->status === 'pending')
+                <button type="submit" class="edit-button">承認</button>
+            @endif
         </div>
     </form>
 </div>

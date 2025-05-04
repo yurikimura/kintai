@@ -26,6 +26,7 @@ Route::post('/logout', [App\Http\Controllers\Auth\LoginController::class, 'logou
 
 // 勤怠管理関連のルート
 Route::middleware(['auth'])->group(function () {
+    Route::get('/attendance/status', [App\Http\Controllers\AttendanceController::class, 'getCurrentStatus'])->name('attendance.status');
     Route::get('/attendance', [App\Http\Controllers\AttendanceController::class, 'index'])->name('attendance.index');
     Route::get('/attendance/list', [App\Http\Controllers\AttendanceController::class, 'list'])->name('attendance.list');
     Route::get('/attendance/{id}', [App\Http\Controllers\AttendanceController::class, 'show'])->name('attendance.show');
@@ -34,7 +35,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/attendance/break/start', [App\Http\Controllers\AttendanceController::class, 'startBreak'])->name('attendance.break.start');
     Route::post('/attendance/break/end', [App\Http\Controllers\AttendanceController::class, 'endBreak'])->name('attendance.break.end');
     Route::post('/attendance/end', [App\Http\Controllers\AttendanceController::class, 'end'])->name('attendance.end');
-    Route::get('/attendance/status', [App\Http\Controllers\AttendanceController::class, 'getCurrentStatus'])->name('attendance.status');
+
 
     // 打刻修正申請のルート
     Route::post('/stamp-correction-request', [App\Http\Controllers\StampCorrectionRequestController::class, 'store'])->name('stamp_correction_request.store');
@@ -52,5 +53,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/attendance/{id}', [App\Http\Controllers\Admin\AttendanceController::class, 'show'])->name('attendance.show');
         Route::get('/staff/list', [App\Http\Controllers\Admin\StaffController::class, 'list'])->name('staff.list');
         Route::get('/attendance/staff/{id}', [App\Http\Controllers\Admin\AttendanceController::class, 'staff'])->name('attendance.staff');
+
+        // 打刻修正申請のルート
+        Route::get('/stamp-correction-requests/list', [App\Http\Controllers\Admin\StampCorrectionRequestController::class, 'list'])
+            ->name('stamp-correction-requests.index');
+        Route::put('/stamp-correction-requests/{id}/approve', [App\Http\Controllers\Admin\StampCorrectionRequestController::class, 'approve'])
+            ->name('stamp-correction-requests.approve');
+        Route::put('/stamp-correction-requests/{id}/reject', [App\Http\Controllers\Admin\StampCorrectionRequestController::class, 'reject'])
+            ->name('stamp-correction-requests.reject');
+
     });
 });

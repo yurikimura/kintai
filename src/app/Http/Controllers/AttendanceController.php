@@ -25,7 +25,12 @@ class AttendanceController extends Controller
             'minutes' => $now->format('i')
         ];
 
-        return view('attendance.index', compact('dateTime'));
+        $attendance = Attendance::where('user_id', auth()->id())
+            ->where('date', $now->format('Y-m-d'))
+            ->latest()
+            ->first();
+
+        return view('attendance.index', compact('dateTime', 'attendance'));
     }
 
     public function list(Request $request)
@@ -99,10 +104,18 @@ class AttendanceController extends Controller
             'remarks' => $request->remarks,
         ]);
 
-        StampCorrectionRequest::create([
-            'user_id' => auth()->id(),
-            'attendance_id' => $id,
-        ]);
+        // 申請が存在しない場合のみ新規作成
+        $existingStampCorrectionRequest = StampCorrectionRequest::where('user_id', auth()->id())
+            ->where('attendance_id', $attendance->id)
+            ->first();
+
+        if (!$existingStampCorrectionRequest) {
+            StampCorrectionRequest::create([
+                'user_id' => auth()->id(),
+                'attendance_id' => $attendance->id,
+            ]);
+        }
+
 
         return redirect()->route('attendance.show', $id)
             ->with('success', '勤怠情報を更新しました');
@@ -119,12 +132,9 @@ class AttendanceController extends Controller
             ->whereNull('end_time')
             ->first();
 
-        // if ($existingAttendance) {
-        //     return response()->json([
-        //         'message' => '既に出勤記録が存在します',
-        //         'attendance' => $existingAttendance
-        //     ], 400);
-        // }
+        if ($existingAttendance) {
+            return response()->json(['error' => '既に出勤記録が存在します'], 400);
+        }
 
         $attendance = Attendance::create([
             'user_id' => $user->id,
@@ -134,7 +144,7 @@ class AttendanceController extends Controller
         ]);
 
         return response()->json([
-            'message' => '出勤記録が完了しました',
+            'message' => '出勤を記録しました',
             'attendance' => $attendance
         ]);
     }
@@ -215,11 +225,24 @@ class AttendanceController extends Controller
 
         $attendance->update([
             'end_time' => $now,
+            'status' => 'pending',
             'working_status' => 'off'
         ]);
 
+        // 申請が存在しない場合のみ新規作成
+        $existingStampCorrectionRequest = StampCorrectionRequest::where('user_id', auth()->id())
+            ->where('attendance_id', $attendance->id)
+            ->first();
+
+        if (!$existingStampCorrectionRequest) {
+            StampCorrectionRequest::create([
+                'user_id' => auth()->id(),
+                'attendance_id' => $attendance->id,
+            ]);
+        }
+
         return response()->json([
-            'message' => '退勤記録が完了しました',
+            'message' => '退勤を記録しました',
             'attendance' => $attendance
         ]);
     }
@@ -231,7 +254,6 @@ class AttendanceController extends Controller
 
         $attendance = Attendance::where('user_id', $user->id)
             ->where('date', $now->format('Y-m-d'))
-            ->whereNull('end_time')
             ->latest()
             ->first();
 
