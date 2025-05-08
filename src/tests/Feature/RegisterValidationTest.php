@@ -114,4 +114,37 @@ class RegisterValidationTest extends TestCase
             'email' => 'newuser@example.com',
         ]);
     }
+
+    /**
+     * 正常な入力時にユーザー情報がデータベースに正しく保存されることを詳細に検証するテスト
+     */
+    public function test_register_stores_correct_user_data_in_database()
+    {
+        $userData = [
+            'name' => 'テスト太郎',
+            'email' => 'taro.test@example.com',
+            'password' => 'secure_password123',
+            'password_confirmation' => 'secure_password123',
+        ];
+
+        $response = $this->post('/register', $userData);
+
+        // リダイレクトの確認
+        $response->assertRedirect(route('attendance.index'));
+
+        // ユーザーが認証されていることを確認
+        $this->assertAuthenticated();
+
+        // データベースに正しいデータが保存されていることを確認
+        $this->assertDatabaseHas('users', [
+            'name' => $userData['name'],
+            'email' => $userData['email'],
+        ]);
+
+        // パスワードがハッシュ化されて保存されていることを確認
+        $user = \App\Models\User::where('email', $userData['email'])->first();
+        $this->assertNotNull($user);
+        $this->assertNotEquals($userData['password'], $user->password);
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check($userData['password'], $user->password));
+    }
 }

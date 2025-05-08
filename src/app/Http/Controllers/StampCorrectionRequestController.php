@@ -40,7 +40,9 @@ class StampCorrectionRequestController extends Controller
         $status = $request->input('status', 'pending');
 
         $query = StampCorrectionRequest::with('user')
-            ->with('attendance');
+            ->with('attendance')
+            ->where('user_id', auth()->id())
+            ->orderByRaw('(SELECT date FROM attendances WHERE attendances.id = stamp_correction_requests.attendance_id) ASC');
 
         if ($status === 'pending') {
             $query->whereHas('attendance', function ($q) {
