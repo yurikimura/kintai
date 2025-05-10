@@ -26,10 +26,10 @@
                 @foreach($attendances as $attendance)
                 <tr>
                     <td>{{ $attendance->user->name }}</td>
-                    <td>{{ $attendance->start_time ? $attendance->start_time->format('H:i') : '-' }}</td>
-                    <td>{{ $attendance->end_time ? $attendance->end_time->format('H:i') : '-' }}</td>
-                    <td>{{ floor($attendance->break_time / 60) }}:{{ str_pad($attendance->break_time % 60, 2, '0', STR_PAD_LEFT) }}</td>
-                <td>{{ floor($attendance->work_time / 60) }}:{{ str_pad($attendance->work_time % 60, 2, '0', STR_PAD_LEFT) }}</td>
+                    <td>{{ $attendance->start_time_formatted }}</td>
+                    <td>{{ $attendance->end_time_formatted }}</td>
+                    <td>{{ $attendance->formatted_break_time }}</td>
+                    <td>{{ $attendance->formatted_work_time }}</td>
                     <td>
                         <a href="{{ route('admin.attendance.show', ['id' => $attendance->id]) }}" class="detail-link">詳細</a>
                     </td>
