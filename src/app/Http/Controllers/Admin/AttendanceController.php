@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Attendance;
 use Carbon\Carbon;
 use App\Models\User;
+use App\Http\Requests\AttendanceUpdateRequest;
 
 class AttendanceController extends Controller
 {
@@ -66,10 +67,15 @@ class AttendanceController extends Controller
         ]);
     }
 
-    public function update(Request $request, $id)
+    public function update(AttendanceUpdateRequest $request, $id)
     {
         $attendance = Attendance::findOrFail($id);
         $attendance->update([
+            'start_time' => $request->start_time,
+            'end_time' => $request->end_time,
+            'start_break_time' => $request->start_break_time,
+            'end_break_time' => $request->end_break_time,
+            'remarks' => $request->remarks,
             'status' => 'approved',
         ]);
         return redirect()->route('admin.attendance.show', $id);

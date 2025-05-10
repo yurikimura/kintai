@@ -4,7 +4,15 @@
 <div class="attendance-detail-container">
     <h2 class="detail-title">勤怠詳細</h2>
 
-    <form action="{{ route('admin.stamp-correction-requests.approve', $attendance->id) }}" method="POST">
+    @if ($errors->any())
+        <div class="error-messages">
+            @foreach ($errors->all() as $error)
+                <p class="error-message">{{ $error }}</p>
+            @endforeach
+        </div>
+    @endif
+
+    <form action="{{ route('admin.attendance.update', $attendance->id) }}" method="POST">
         @csrf
         @method('PUT')
         <div class="attendance-card">
@@ -21,26 +29,28 @@
             <div class="form-group">
                 <label>出勤・退勤</label>
                 <div class="time-range">
-                    <div class="form-value">{{ $attendance->start_time ? $attendance->start_time->format('H:i') : '' }}<span class="time-separator">〜</span>{{ $attendance->end_time ? $attendance->end_time->format('H:i') : '' }}</div>
+                    <input type="time" name="start_time" value="{{ old('start_time', $attendance->start_time ? $attendance->start_time->format('H:i') : '') }}" class="@error('start_time') is-invalid @enderror">
+                    <span class="time-separator">〜</span>
+                    <input type="time" name="end_time" value="{{ old('end_time', $attendance->end_time ? $attendance->end_time->format('H:i') : '') }}" class="@error('end_time') is-invalid @enderror">
                 </div>
             </div>
 
             <div class="form-group">
-                <label>休憩</label>
+                <label>休憩1</label>
                 <div class="time-range">
-                    <div class="form-value">{{ $attendance->start_break_time ? $attendance->start_break_time->format('H:i') : '' }}<span class="time-separator">〜</span>{{ $attendance->end_break_time ? $attendance->end_break_time->format('H:i') : '' }}</div>
+                    <input type="time" name="start_break_time" value="{{ old('start_break_time', $attendance->start_break_time ? $attendance->start_break_time->format('H:i') : '') }}" class="@error('start_break_time') is-invalid @enderror">
+                    <span class="time-separator">〜</span>
+                    <input type="time" name="end_break_time" value="{{ old('end_break_time', $attendance->end_break_time ? $attendance->end_break_time->format('H:i') : '') }}" class="@error('end_break_time') is-invalid @enderror">
                 </div>
             </div>
 
             <div class="form-group">
                 <label>備考</label>
-                <div class="form-value">{!! nl2br(e($attendance->remarks)) !!}</div>
+                <textarea class="note-box @error('remarks') is-invalid @enderror" name="remarks" rows="4">{{ old('remarks', $attendance->remarks) }}</textarea>
             </div>
         </div>
         <div class="form-actions">
-            @if($attendance->status === 'pending')
-                <button type="submit" class="edit-button">承認</button>
-            @endif
+            <button type="submit" class="edit-button">修正</button>
         </div>
     </form>
 </div>
@@ -161,6 +171,30 @@
     border-radius: 4px;
     cursor: pointer;
     transition: opacity 0.3s;
+}
+
+.edit-button:hover {
+    opacity: 0.8;
+}
+
+.error-messages {
+    background-color: #fff3f3;
+    border: 1px solid #ffcdd2;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.error-message {
+    color: #d32f2f;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.is-invalid {
+    border-color: #d32f2f !important;
+    background-color: #fff3f3 !important;
 }
 </style>
 @endsection
