@@ -94,7 +94,7 @@
             <button class="break-button {{ $attendance && $attendance->working_status === 'working' ? '' : 'hidden' }}" id="startBreak">休憩入</button>
             <button class="break-return-button {{ $attendance && $attendance->working_status === 'on_break' ? '' : 'hidden' }}" id="endBreak">休憩戻</button>
         </div>
-        <div class="thank-you-message show" id="thankYouMessage">
+        <div class="thank-you-message {{ $attendance && $attendance->working_status === 'off' ? 'show' : 'hidden' }}" id="thankYouMessage">
             お疲れ様でした。
         </div>
     </div>

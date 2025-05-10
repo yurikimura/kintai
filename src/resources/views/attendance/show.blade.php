@@ -5,6 +5,15 @@
     <div class="attendance-header">
         <h2>勤怠詳細</h2>
     </div>
+
+    @if ($errors->any())
+        <div class="error-messages">
+            @foreach ($errors->all() as $error)
+                <p class="error-message">{{ $error }}</p>
+            @endforeach
+        </div>
+    @endif
+
     <form action="{{ route('attendance.update', $attendance->id) }}" method="POST">
         @csrf
         @method('PUT')
@@ -25,9 +34,9 @@
                     @if($attendance->status === 'pending')
                         <div class="form-value">{{ $attendance->start_time ? $attendance->start_time->format('H:i') : '' }}<span class="time-separator">〜</span>{{ $attendance->end_time ? $attendance->end_time->format('H:i') : '' }}</div>
                     @else
-                        <input type="time" name="start_time" value="{{ $attendance->start_time ? $attendance->start_time->format('H:i') : '' }}" {{ $attendance->status === 'pending' ? 'disabled' : '' }}>
+                        <input type="time" name="start_time" value="{{ $attendance->start_time ? $attendance->start_time->format('H:i') : '' }}" {{ $attendance->status === 'pending' ? 'disabled' : '' }} class="@error('start_time') is-invalid @enderror">
                         <span class="time-separator">〜</span>
-                        <input type="time" name="end_time" value="{{ $attendance->end_time ? $attendance->end_time->format('H:i') : '' }}" {{ $attendance->status === 'pending' ? 'disabled' : '' }}>
+                        <input type="time" name="end_time" value="{{ $attendance->end_time ? $attendance->end_time->format('H:i') : '' }}" {{ $attendance->status === 'pending' ? 'disabled' : '' }} class="@error('end_time') is-invalid @enderror">
                     @endif
                 </div>
             </div>
@@ -38,9 +47,9 @@
                     @if($attendance->status === 'pending')
                         <div class="form-value">{{ $attendance->start_break_time ? $attendance->start_break_time->format('H:i') : '' }}<span class="time-separator">〜</span>{{ $attendance->end_break_time ? $attendance->end_break_time->format('H:i') : '' }}</div>
                     @else
-                        <input type="time" name="start_break_time" value="{{ $attendance->start_break_time ? $attendance->start_break_time->format('H:i') : '' }}" {{ $attendance->status === 'pending' ? 'disabled' : '' }}>
+                        <input type="time" name="start_break_time" value="{{ $attendance->start_break_time ? $attendance->start_break_time->format('H:i') : '' }}" {{ $attendance->status === 'pending' ? 'disabled' : '' }} class="@error('start_break_time') is-invalid @enderror">
                         <span class="time-separator">〜</span>
-                        <input type="time" name="end_break_time" value="{{ $attendance->end_break_time ? $attendance->end_break_time->format('H:i') : '' }}" {{ $attendance->status === 'pending' ? 'disabled' : '' }}>
+                        <input type="time" name="end_break_time" value="{{ $attendance->end_break_time ? $attendance->end_break_time->format('H:i') : '' }}" {{ $attendance->status === 'pending' ? 'disabled' : '' }} class="@error('end_break_time') is-invalid @enderror">
                     @endif
                 </div>
             </div>
@@ -50,7 +59,7 @@
                 @if($attendance->status === 'pending')
                     <div class="form-value">{!! nl2br(e($attendance->remarks)) !!}</div>
                 @else
-                    <textarea class="note-box" name="remarks" rows="4">{{ $attendance->remarks }}</textarea>
+                    <textarea class="note-box @error('remarks') is-invalid @enderror" name="remarks" rows="4">{{ $attendance->remarks }}</textarea>
                 @endif
             </div>
         </div>
@@ -186,6 +195,26 @@
 
 .edit-button:hover {
     opacity: 0.8;
+}
+
+.error-messages {
+    background-color: #fff3f3;
+    border: 1px solid #ffcdd2;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.error-message {
+    color: #d32f2f;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.is-invalid {
+    border-color: #d32f2f !important;
+    background-color: #fff3f3 !important;
 }
 </style>
 @endsection
