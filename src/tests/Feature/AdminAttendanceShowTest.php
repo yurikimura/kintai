@@ -8,6 +8,7 @@ use Tests\TestCase;
 use App\Models\Admin;
 use App\Models\User;
 use App\Models\Attendance;
+use App\Models\StampCorrectionRequest;
 use Carbon\Carbon;
 
 class AdminAttendanceShowTest extends TestCase
@@ -435,6 +436,1015 @@ class AdminAttendanceShowTest extends TestCase
 
         $nextDayResponse->assertSee($nextNextDayUrl);
         $nextDayResponse->assertSee($prevFromNextDayUrl);
+
+        // テスト日時をリセット
+        Carbon::setTestNow(null);
+    }
+
+    /**
+     * 管理者ユーザーが勤怠詳細ページで選択した情報が正しく表示されることを確認するテスト
+     */
+    public function test_admin_can_view_correct_attendance_details()
+    {
+        // テスト日時を固定
+        $testDate = Carbon::create(2023, 9, 15, 10, 0, 0);
+        Carbon::setTestNow($testDate);
+
+        // 管理者ユーザーを作成
+        $admin = Admin::factory()->create([
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+
+        // 一般ユーザーを作成
+        $user = User::factory()->create([
+            'name' => '高橋三郎',
+            'email' => 'takahashi@example.com',
+        ]);
+
+        // 勤怠データを作成
+        $attendance = Attendance::factory()->create([
+            'user_id' => $user->id,
+            'date' => $testDate->format('Y-m-d'),
+            'start_time' => '09:00:00',
+            'end_time' => '18:00:00',
+            'break_time' => 60,
+            'work_time' => 480,
+            'remarks' => '通常勤務：高橋',
+        ]);
+
+        // 管理者としてログイン
+        $this->actingAs($admin, 'admin');
+
+        // 勤怠一覧ページにアクセス
+        $listResponse = $this->get('/admin/attendance/list');
+        $listResponse->assertStatus(200);
+
+        // 勤怠一覧ページに正しい情報が表示されていることを確認
+        $listResponse->assertSee($user->name);
+        $listResponse->assertSee('09:00');
+        $listResponse->assertSee('18:00');
+        $listResponse->assertSee('1:00'); // 休憩時間
+        $listResponse->assertSee('8:00'); // 勤務時間
+
+        // 詳細ページへのリンクが存在することを確認
+        $detailUrl = route('admin.attendance.show', ['id' => $attendance->id]);
+        $listResponse->assertSee($detailUrl);
+
+        // 詳細ページにアクセス
+        $detailResponse = $this->get($detailUrl);
+        $detailResponse->assertStatus(200);
+
+        // 詳細ページに正しい情報が表示されていることを確認
+        $detailResponse->assertSee($user->name);
+        $detailResponse->assertSee($testDate->format('Y年n月j日'));
+        $detailResponse->assertSee('09:00');
+        $detailResponse->assertSee('18:00');
+        $detailResponse->assertSee('1:00'); // 休憩時間
+        $detailResponse->assertSee('8:00'); // 勤務時間
+        $detailResponse->assertSee('通常勤務：高橋');
+
+        // テスト日時をリセット
+        Carbon::setTestNow(null);
+    }
+
+    /**
+     * 管理者ユーザーが勤怠詳細ページで出勤時間を退勤時間より後に設定した場合のバリデーションエラーを確認するテスト
+     */
+    public function test_admin_cannot_set_start_time_after_end_time()
+    {
+        // テスト日時を固定
+        $testDate = Carbon::create(2023, 10, 15, 10, 0, 0);
+        Carbon::setTestNow($testDate);
+
+        // 管理者ユーザーを作成
+        $admin = Admin::factory()->create([
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+
+        // 一般ユーザーを作成
+        $user = User::factory()->create([
+            'name' => '伊藤四郎',
+            'email' => 'ito@example.com',
+        ]);
+
+        // 勤怠データを作成
+        $attendance = Attendance::factory()->create([
+            'user_id' => $user->id,
+            'date' => $testDate->format('Y-m-d'),
+            'start_time' => '09:00:00',
+            'end_time' => '18:00:00',
+            'break_time' => 60,
+            'work_time' => 480,
+            'remarks' => '通常勤務：伊藤',
+        ]);
+
+        // 管理者としてログイン
+        $this->actingAs($admin, 'admin');
+
+        // 勤怠詳細ページにアクセス
+        $detailResponse = $this->get('/admin/attendance/' . $attendance->id);
+        $detailResponse->assertStatus(200);
+
+        // 出勤時間を退勤時間より後に設定して更新
+        $updateResponse = $this->put('/admin/attendance/' . $attendance->id, [
+            'date' => $testDate->format('Y-m-d'),
+            'start_time' => '19:00:00', // 退勤時間（18:00）より後の時間
+            'end_time' => '18:00:00',
+            'break_time' => 60,
+            'remarks' => '通常勤務：伊藤',
+        ]);
+
+        // バリデーションエラーが発生することを確認
+        $updateResponse->assertSessionHasErrors('start_time');
+        $updateResponse->assertSessionHasErrors('end_time');
+
+        // エラーメッセージが正しく表示されることを確認
+        $updateResponse->assertSessionHasErrors([
+            'start_time' => '出勤時間もしくは退勤時間が不適切な値です',
+            'end_time' => '出勤時間もしくは退勤時間が不適切な値です',
+        ]);
+
+        // 勤怠データが更新されていないことを確認
+        $this->assertDatabaseHas('attendances', [
+            'id' => $attendance->id,
+            'start_time' => '09:00:00',
+            'end_time' => '18:00:00',
+        ]);
+
+        // テスト日時をリセット
+        Carbon::setTestNow(null);
+    }
+
+    /**
+     * 管理者ユーザーが勤怠詳細ページで休憩開始時間を退勤時間より後に設定した場合のバリデーションエラーを確認するテスト
+     */
+    public function test_admin_cannot_set_break_start_time_after_end_time()
+    {
+        // テスト日時を固定
+        $testDate = Carbon::create(2023, 11, 15, 10, 0, 0);
+        Carbon::setTestNow($testDate);
+
+        // 管理者ユーザーを作成
+        $admin = Admin::factory()->create([
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+
+        // 一般ユーザーを作成
+        $user = User::factory()->create([
+            'name' => '渡辺五郎',
+            'email' => 'watanabe@example.com',
+        ]);
+
+        // 勤怠データを作成
+        $attendance = Attendance::factory()->create([
+            'user_id' => $user->id,
+            'date' => $testDate->format('Y-m-d'),
+            'start_time' => '09:00:00',
+            'end_time' => '18:00:00',
+            'break_time' => 60,
+            'work_time' => 480,
+            'remarks' => '通常勤務：渡辺',
+        ]);
+
+        // 管理者としてログイン
+        $this->actingAs($admin, 'admin');
+
+        // 勤怠詳細ページにアクセス
+        $detailResponse = $this->get('/admin/attendance/' . $attendance->id);
+        $detailResponse->assertStatus(200);
+
+        // 休憩開始時間を退勤時間より後に設定して更新
+        $updateResponse = $this->put('/admin/attendance/' . $attendance->id, [
+            'date' => $testDate->format('Y-m-d'),
+            'start_time' => '09:00:00',
+            'end_time' => '18:00:00',
+            'break_start_time' => '19:00:00', // 退勤時間（18:00）より後の時間
+            'break_end_time' => '20:00:00',
+            'break_time' => 60,
+            'remarks' => '通常勤務：渡辺',
+        ]);
+
+        // バリデーションエラーが発生することを確認
+        $updateResponse->assertSessionHasErrors('break_start_time');
+        $updateResponse->assertSessionHasErrors('break_end_time');
+
+        // エラーメッセージが正しく表示されることを確認
+        $updateResponse->assertSessionHasErrors([
+            'break_start_time' => '出勤時間もしくは退勤時間が不適切な値です',
+            'break_end_time' => '出勤時間もしくは退勤時間が不適切な値です',
+        ]);
+
+        // 勤怠データが更新されていないことを確認
+        $this->assertDatabaseHas('attendances', [
+            'id' => $attendance->id,
+            'start_time' => '09:00:00',
+            'end_time' => '18:00:00',
+            'break_time' => 60,
+        ]);
+
+        // テスト日時をリセット
+        Carbon::setTestNow(null);
+    }
+
+    /**
+     * 管理者ユーザーが勤怠詳細ページで休憩終了時間を退勤時間より後に設定した場合のバリデーションエラーを確認するテスト
+     */
+    public function test_admin_cannot_set_break_end_time_after_end_time()
+    {
+        // テスト日時を固定
+        $testDate = Carbon::create(2023, 12, 15, 10, 0, 0);
+        Carbon::setTestNow($testDate);
+
+        // 管理者ユーザーを作成
+        $admin = Admin::factory()->create([
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+
+        // 一般ユーザーを作成
+        $user = User::factory()->create([
+            'name' => '中村六郎',
+            'email' => 'nakamura@example.com',
+        ]);
+
+        // 勤怠データを作成
+        $attendance = Attendance::factory()->create([
+            'user_id' => $user->id,
+            'date' => $testDate->format('Y-m-d'),
+            'start_time' => '09:00:00',
+            'end_time' => '18:00:00',
+            'break_time' => 60,
+            'work_time' => 480,
+            'remarks' => '通常勤務：中村',
+        ]);
+
+        // 管理者としてログイン
+        $this->actingAs($admin, 'admin');
+
+        // 勤怠詳細ページにアクセス
+        $detailResponse = $this->get('/admin/attendance/' . $attendance->id);
+        $detailResponse->assertStatus(200);
+
+        // 休憩終了時間を退勤時間より後に設定して更新
+        $updateResponse = $this->put('/admin/attendance/' . $attendance->id, [
+            'date' => $testDate->format('Y-m-d'),
+            'start_time' => '09:00:00',
+            'end_time' => '18:00:00',
+            'break_start_time' => '12:00:00',
+            'break_end_time' => '19:00:00', // 退勤時間（18:00）より後の時間
+            'break_time' => 60,
+            'remarks' => '通常勤務：中村',
+        ]);
+
+        // バリデーションエラーが発生することを確認
+        $updateResponse->assertSessionHasErrors('break_start_time');
+        $updateResponse->assertSessionHasErrors('break_end_time');
+
+        // エラーメッセージが正しく表示されることを確認
+        $updateResponse->assertSessionHasErrors([
+            'break_start_time' => '出勤時間もしくは退勤時間が不適切な値です',
+            'break_end_time' => '出勤時間もしくは退勤時間が不適切な値です',
+        ]);
+
+        // 勤怠データが更新されていないことを確認
+        $this->assertDatabaseHas('attendances', [
+            'id' => $attendance->id,
+            'start_time' => '09:00:00',
+            'end_time' => '18:00:00',
+            'break_time' => 60,
+        ]);
+
+        // テスト日時をリセット
+        Carbon::setTestNow(null);
+    }
+
+    /**
+     * 管理者ユーザーが勤怠詳細ページで備考欄を未入力のまま保存した場合のバリデーションエラーを確認するテスト
+     */
+    public function test_admin_cannot_save_attendance_without_remarks()
+    {
+        // テスト日時を固定
+        $testDate = Carbon::create(2024, 1, 15, 10, 0, 0);
+        Carbon::setTestNow($testDate);
+
+        // 管理者ユーザーを作成
+        $admin = Admin::factory()->create([
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+
+        // 一般ユーザーを作成
+        $user = User::factory()->create([
+            'name' => '小林七郎',
+            'email' => 'kobayashi@example.com',
+        ]);
+
+        // 勤怠データを作成
+        $attendance = Attendance::factory()->create([
+            'user_id' => $user->id,
+            'date' => $testDate->format('Y-m-d'),
+            'start_time' => '09:00:00',
+            'end_time' => '18:00:00',
+            'break_time' => 60,
+            'work_time' => 480,
+            'remarks' => '通常勤務：小林',
+        ]);
+
+        // 管理者としてログイン
+        $this->actingAs($admin, 'admin');
+
+        // 勤怠詳細ページにアクセス
+        $detailResponse = $this->get('/admin/attendance/' . $attendance->id);
+        $detailResponse->assertStatus(200);
+
+        // 備考欄を空にして更新
+        $updateResponse = $this->put('/admin/attendance/' . $attendance->id, [
+            'date' => $testDate->format('Y-m-d'),
+            'start_time' => '09:00:00',
+            'end_time' => '18:00:00',
+            'break_time' => 60,
+            'remarks' => '', // 備考欄を空に設定
+        ]);
+
+        // バリデーションエラーが発生することを確認
+        $updateResponse->assertSessionHasErrors('remarks');
+
+        // エラーメッセージが正しく表示されることを確認
+        $updateResponse->assertSessionHasErrors([
+            'remarks' => '備考を記入してください',
+        ]);
+
+        // 勤怠データが更新されていないことを確認
+        $this->assertDatabaseHas('attendances', [
+            'id' => $attendance->id,
+            'remarks' => '通常勤務：小林',
+        ]);
+
+        // テスト日時をリセット
+        Carbon::setTestNow(null);
+    }
+
+    /**
+     * 管理者ユーザーがスタッフ一覧ページで全一般ユーザーの情報が正しく表示されることを確認するテスト
+     */
+    public function test_admin_can_view_all_staff_list()
+    {
+        // 管理者ユーザーを作成
+        $admin = Admin::factory()->create([
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+
+        // 複数の一般ユーザーを作成
+        $users = [
+            User::factory()->create([
+                'name' => '山田太郎',
+                'email' => 'yamada@example.com',
+            ]),
+            User::factory()->create([
+                'name' => '鈴木花子',
+                'email' => 'suzuki@example.com',
+            ]),
+            User::factory()->create([
+                'name' => '佐藤次郎',
+                'email' => 'sato@example.com',
+            ]),
+            User::factory()->create([
+                'name' => '高橋三郎',
+                'email' => 'takahashi@example.com',
+            ]),
+            User::factory()->create([
+                'name' => '伊藤四郎',
+                'email' => 'ito@example.com',
+            ])
+        ];
+
+        // 管理者としてログイン
+        $this->actingAs($admin, 'admin');
+
+        // スタッフ一覧ページにアクセス
+        $response = $this->get('/admin/staff/list');
+        $response->assertStatus(200);
+
+        // 各ユーザーの情報が正しく表示されていることを確認
+        foreach ($users as $user) {
+            // ユーザー名が表示されていることを確認
+            $response->assertSee($user->name);
+
+            // メールアドレスが表示されていることを確認
+            $response->assertSee($user->email);
+        }
+
+        // 管理者ユーザーの情報は表示されていないことを確認
+        $response->assertDontSee($admin->email);
+    }
+
+    /**
+     * 管理者ユーザーが勤怠一覧ページで「前月」ボタンを押した際に前月の情報が表示されることを確認するテスト
+     */
+    public function test_admin_can_view_previous_month_attendance()
+    {
+        // テスト日時を固定（2024年2月15日）
+        $currentDate = Carbon::create(2024, 2, 15, 10, 0, 0);
+        Carbon::setTestNow($currentDate);
+
+        // 前月の日付（2024年1月15日）
+        $previousMonthDate = $currentDate->copy()->subMonth();
+
+        // 管理者ユーザーを作成
+        $admin = Admin::factory()->create([
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+
+        // 一般ユーザーを作成
+        $user1 = User::factory()->create(['name' => '山田太郎']);
+        $user2 = User::factory()->create(['name' => '鈴木花子']);
+
+        // 当月と前月の勤怠データを作成
+        // 当月の勤怠
+        Attendance::factory()->create([
+            'user_id' => $user1->id,
+            'date' => $currentDate->format('Y-m-d'),
+            'start_time' => '09:00:00',
+            'end_time' => '18:00:00',
+            'break_time' => 60,
+            'work_time' => 480,
+            'remarks' => '当月の勤務：山田',
+        ]);
+
+        Attendance::factory()->create([
+            'user_id' => $user2->id,
+            'date' => $currentDate->format('Y-m-d'),
+            'start_time' => '10:00:00',
+            'end_time' => '19:00:00',
+            'break_time' => 60,
+            'work_time' => 480,
+            'remarks' => '当月の勤務：鈴木',
+        ]);
+
+        // 前月の勤怠
+        Attendance::factory()->create([
+            'user_id' => $user1->id,
+            'date' => $previousMonthDate->format('Y-m-d'),
+            'start_time' => '08:30:00',
+            'end_time' => '17:30:00',
+            'break_time' => 60,
+            'work_time' => 480,
+            'remarks' => '前月の勤務：山田',
+        ]);
+
+        Attendance::factory()->create([
+            'user_id' => $user2->id,
+            'date' => $previousMonthDate->format('Y-m-d'),
+            'start_time' => '09:30:00',
+            'end_time' => '18:30:00',
+            'break_time' => 60,
+            'work_time' => 480,
+            'remarks' => '前月の勤務：鈴木',
+        ]);
+
+        // 管理者としてログイン
+        $this->actingAs($admin, 'admin');
+
+        // 勤怠一覧ページにアクセス（現在の月）
+        $response = $this->get('/admin/attendance/list');
+        $response->assertStatus(200);
+
+        // 当月の情報が表示されていることを確認
+        $response->assertSee($currentDate->format('Y年n月j日'));
+        $response->assertSee('当月の勤務：山田');
+        $response->assertSee('当月の勤務：鈴木');
+        $response->assertDontSee('前月の勤務：山田');
+        $response->assertDontSee('前月の勤務：鈴木');
+
+        // 前月ボタンのリンクURLを取得
+        $previousMonthUrl = '/admin/attendance/list?date=' . $previousMonthDate->format('Y-m-d');
+        $response->assertSee($previousMonthUrl);
+
+        // 前月ボタンをクリック（前月の日付でページにアクセス）
+        $previousMonthResponse = $this->get($previousMonthUrl);
+        $previousMonthResponse->assertStatus(200);
+
+        // 前月の情報が表示されていることを確認
+        $previousMonthResponse->assertSee($previousMonthDate->format('Y年n月j日'));
+        $previousMonthResponse->assertSee('前月の勤務：山田');
+        $previousMonthResponse->assertSee('前月の勤務：鈴木');
+        $previousMonthResponse->assertDontSee('当月の勤務：山田');
+        $previousMonthResponse->assertDontSee('当月の勤務：鈴木');
+
+        // 前月の出勤・退勤時間が正しく表示されていることを確認
+        $previousMonthResponse->assertSee('08:30');
+        $previousMonthResponse->assertSee('17:30');
+        $previousMonthResponse->assertSee('09:30');
+        $previousMonthResponse->assertSee('18:30');
+
+        // テスト日時をリセット
+        Carbon::setTestNow(null);
+    }
+
+    /**
+     * 管理者ユーザーが勤怠一覧ページで「翌月」ボタンを押した際に翌月の情報が表示されることを確認するテスト
+     */
+    public function test_admin_can_view_next_month_attendance()
+    {
+        // テスト日時を固定（2024年3月15日）
+        $currentDate = Carbon::create(2024, 3, 15, 10, 0, 0);
+        Carbon::setTestNow($currentDate);
+
+        // 翌月の日付（2024年4月15日）
+        $nextMonthDate = $currentDate->copy()->addMonth();
+
+        // 管理者ユーザーを作成
+        $admin = Admin::factory()->create([
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+
+        // 一般ユーザーを作成
+        $user1 = User::factory()->create(['name' => '佐藤次郎']);
+        $user2 = User::factory()->create(['name' => '高橋三郎']);
+
+        // 当月と翌月の勤怠データを作成
+        // 当月の勤怠
+        Attendance::factory()->create([
+            'user_id' => $user1->id,
+            'date' => $currentDate->format('Y-m-d'),
+            'start_time' => '09:00:00',
+            'end_time' => '18:00:00',
+            'break_time' => 60,
+            'work_time' => 480,
+            'remarks' => '当月の勤務：佐藤',
+        ]);
+
+        Attendance::factory()->create([
+            'user_id' => $user2->id,
+            'date' => $currentDate->format('Y-m-d'),
+            'start_time' => '10:00:00',
+            'end_time' => '19:00:00',
+            'break_time' => 60,
+            'work_time' => 480,
+            'remarks' => '当月の勤務：高橋',
+        ]);
+
+        // 翌月の勤怠
+        Attendance::factory()->create([
+            'user_id' => $user1->id,
+            'date' => $nextMonthDate->format('Y-m-d'),
+            'start_time' => '08:45:00',
+            'end_time' => '17:45:00',
+            'break_time' => 60,
+            'work_time' => 480,
+            'remarks' => '翌月の勤務：佐藤',
+        ]);
+
+        Attendance::factory()->create([
+            'user_id' => $user2->id,
+            'date' => $nextMonthDate->format('Y-m-d'),
+            'start_time' => '09:45:00',
+            'end_time' => '18:45:00',
+            'break_time' => 60,
+            'work_time' => 480,
+            'remarks' => '翌月の勤務：高橋',
+        ]);
+
+        // 管理者としてログイン
+        $this->actingAs($admin, 'admin');
+
+        // 勤怠一覧ページにアクセス（現在の月）
+        $response = $this->get('/admin/attendance/list');
+        $response->assertStatus(200);
+
+        // 当月の情報が表示されていることを確認
+        $response->assertSee($currentDate->format('Y年n月j日'));
+        $response->assertSee('当月の勤務：佐藤');
+        $response->assertSee('当月の勤務：高橋');
+        $response->assertDontSee('翌月の勤務：佐藤');
+        $response->assertDontSee('翌月の勤務：高橋');
+
+        // 翌月ボタンのリンクURLを取得
+        $nextMonthUrl = '/admin/attendance/list?date=' . $nextMonthDate->format('Y-m-d');
+        $response->assertSee($nextMonthUrl);
+
+        // 翌月ボタンをクリック（翌月の日付でページにアクセス）
+        $nextMonthResponse = $this->get($nextMonthUrl);
+        $nextMonthResponse->assertStatus(200);
+
+        // 翌月の情報が表示されていることを確認
+        $nextMonthResponse->assertSee($nextMonthDate->format('Y年n月j日'));
+        $nextMonthResponse->assertSee('翌月の勤務：佐藤');
+        $nextMonthResponse->assertSee('翌月の勤務：高橋');
+        $nextMonthResponse->assertDontSee('当月の勤務：佐藤');
+        $nextMonthResponse->assertDontSee('当月の勤務：高橋');
+
+        // 翌月の出勤・退勤時間が正しく表示されていることを確認
+        $nextMonthResponse->assertSee('08:45');
+        $nextMonthResponse->assertSee('17:45');
+        $nextMonthResponse->assertSee('09:45');
+        $nextMonthResponse->assertSee('18:45');
+
+        // テスト日時をリセット
+        Carbon::setTestNow(null);
+    }
+
+    /**
+     * 管理者ユーザーが勤怠一覧ページで「詳細」ボタンを押した際に勤怠詳細画面に正しく遷移することを確認するテスト
+     */
+    public function test_admin_can_navigate_to_attendance_detail_from_list()
+    {
+        // テスト日時を固定
+        $testDate = Carbon::create(2024, 5, 15, 10, 0, 0);
+        Carbon::setTestNow($testDate);
+
+        // 管理者ユーザーを作成
+        $admin = Admin::factory()->create([
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+
+        // 一般ユーザーを作成
+        $user = User::factory()->create([
+            'name' => '伊藤四郎',
+            'email' => 'ito@example.com',
+        ]);
+
+        // 勤怠データを作成
+        $attendance = Attendance::factory()->create([
+            'user_id' => $user->id,
+            'date' => $testDate->format('Y-m-d'),
+            'start_time' => '09:00:00',
+            'end_time' => '18:00:00',
+            'break_time' => 60,
+            'work_time' => 480,
+            'remarks' => '通常勤務：伊藤',
+        ]);
+
+        // 管理者としてログイン
+        $this->actingAs($admin, 'admin');
+
+        // 勤怠一覧ページにアクセス
+        $listResponse = $this->get('/admin/attendance/list');
+        $listResponse->assertStatus(200);
+
+        // 勤怠一覧ページに正しい情報が表示されていることを確認
+        $listResponse->assertSee($user->name);
+        $listResponse->assertSee('09:00');
+        $listResponse->assertSee('18:00');
+        $listResponse->assertSee('1:00'); // 休憩時間
+        $listResponse->assertSee('8:00'); // 勤務時間
+
+        // 詳細ページへのリンクが存在することを確認
+        $detailUrl = route('admin.attendance.show', ['id' => $attendance->id]);
+        $listResponse->assertSee($detailUrl);
+
+        // 詳細ページにアクセス
+        $detailResponse = $this->get($detailUrl);
+        $detailResponse->assertStatus(200);
+
+        // 詳細ページに正しい情報が表示されていることを確認
+        $detailResponse->assertSee($user->name);
+        $detailResponse->assertSee($testDate->format('Y年n月j日'));
+        $detailResponse->assertSee('09:00');
+        $detailResponse->assertSee('18:00');
+        $detailResponse->assertSee('1:00'); // 休憩時間
+        $detailResponse->assertSee('8:00'); // 勤務時間
+        $detailResponse->assertSee('通常勤務：伊藤');
+
+        // テスト日時をリセット
+        Carbon::setTestNow(null);
+    }
+
+    /**
+     * 管理者ユーザーが修正申請一覧ページで未承認の申請が正しく表示されることを確認するテスト
+     */
+    public function test_admin_can_view_unapproved_correction_requests()
+    {
+        // テスト日時を固定
+        $testDate = Carbon::create(2024, 6, 15, 10, 0, 0);
+        Carbon::setTestNow($testDate);
+
+        // 管理者ユーザーを作成
+        $admin = Admin::factory()->create([
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+
+        // 一般ユーザーを作成
+        $users = [
+            User::factory()->create(['name' => '山田太郎']),
+            User::factory()->create(['name' => '鈴木花子']),
+            User::factory()->create(['name' => '佐藤次郎'])
+        ];
+
+        // 各ユーザーの勤怠データと修正申請を作成
+        foreach ($users as $user) {
+            // 勤怠データを作成
+            $attendance = Attendance::factory()->create([
+                'user_id' => $user->id,
+                'date' => $testDate->format('Y-m-d'),
+                'start_time' => '09:00:00',
+                'end_time' => '18:00:00',
+                'break_time' => 60,
+                'work_time' => 480,
+                'remarks' => '通常勤務：' . $user->name,
+            ]);
+
+            // 未承認の修正申請を作成
+            StampCorrectionRequest::factory()->create([
+                'user_id' => $user->id,
+                'attendance_id' => $attendance->id,
+                'request_date' => $testDate->format('Y-m-d'),
+                'correction_type' => '出勤時間',
+                'before_time' => '09:00:00',
+                'after_time' => '08:30:00',
+                'reason' => '電車の遅延により遅刻',
+                'status' => 'unapproved',
+            ]);
+        }
+
+        // 管理者としてログイン
+        $this->actingAs($admin, 'admin');
+
+        // 修正申請一覧ページにアクセス
+        $response = $this->get('/admin/stamp-correction-requests/list');
+        $response->assertStatus(200);
+
+        // 未承認タブが選択されていることを確認
+        $response->assertSee('未承認');
+        $response->assertSee('active');
+
+        // 各ユーザーの修正申請が表示されていることを確認
+        foreach ($users as $user) {
+            // ユーザー名が表示されていることを確認
+            $response->assertSee($user->name);
+
+            // 申請内容が表示されていることを確認
+            $response->assertSee('出勤時間');
+            $response->assertSee('09:00');
+            $response->assertSee('08:30');
+            $response->assertSee('電車の遅延により遅刻');
+
+            // 申請日が表示されていることを確認
+            $response->assertSee($testDate->format('Y年n月j日'));
+        }
+
+        // テスト日時をリセット
+        Carbon::setTestNow(null);
+    }
+
+    /**
+     * 管理者ユーザーが修正申請一覧ページで承認済みの申請が正しく表示されることを確認するテスト
+     */
+    public function test_admin_can_view_approved_correction_requests()
+    {
+        // テスト日時を固定
+        $testDate = Carbon::create(2024, 6, 15, 10, 0, 0);
+        Carbon::setTestNow($testDate);
+
+        // 管理者ユーザーを作成
+        $admin = Admin::factory()->create([
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+
+        // 一般ユーザーを作成
+        $users = [
+            User::factory()->create(['name' => '山田太郎']),
+            User::factory()->create(['name' => '鈴木花子']),
+            User::factory()->create(['name' => '佐藤次郎'])
+        ];
+
+        // 各ユーザーの勤怠データと修正申請を作成
+        foreach ($users as $user) {
+            // 勤怠データを作成
+            $attendance = Attendance::factory()->create([
+                'user_id' => $user->id,
+                'date' => $testDate->format('Y-m-d'),
+                'start_time' => '09:00:00',
+                'end_time' => '18:00:00',
+                'break_time' => 60,
+                'work_time' => 480,
+                'remarks' => '通常勤務：' . $user->name,
+            ]);
+
+            // 承認済みの修正申請を作成
+            StampCorrectionRequest::factory()->create([
+                'user_id' => $user->id,
+                'attendance_id' => $attendance->id,
+                'request_date' => $testDate->format('Y-m-d'),
+                'correction_type' => '出勤時間',
+                'before_time' => '09:00:00',
+                'after_time' => '08:30:00',
+                'reason' => '電車の遅延により遅刻',
+                'status' => 'approved',
+                'approved_at' => $testDate->format('Y-m-d H:i:s'),
+                'approved_by' => $admin->id,
+            ]);
+        }
+
+        // 管理者としてログイン
+        $this->actingAs($admin, 'admin');
+
+        // 修正申請一覧ページにアクセス
+        $response = $this->get('/admin/stamp-correction-requests/list');
+        $response->assertStatus(200);
+
+        // 承認済みタブが選択されていることを確認
+        $response->assertSee('承認済み');
+        $response->assertSee('active');
+
+        // 各ユーザーの修正申請が表示されていることを確認
+        foreach ($users as $user) {
+            // ユーザー名が表示されていることを確認
+            $response->assertSee($user->name);
+
+            // 申請内容が表示されていることを確認
+            $response->assertSee('出勤時間');
+            $response->assertSee('09:00');
+            $response->assertSee('08:30');
+            $response->assertSee('電車の遅延により遅刻');
+
+            // 申請日が表示されていることを確認
+            $response->assertSee($testDate->format('Y年n月j日'));
+
+            // 承認日時が表示されていることを確認
+            $response->assertSee($testDate->format('Y年n月j日 H:i'));
+        }
+
+        // テスト日時をリセット
+        Carbon::setTestNow(null);
+    }
+
+    /**
+     * 管理者ユーザーが修正申請の詳細画面で正しい承認内容が表示されることを確認するテスト
+     */
+    public function test_admin_can_view_correction_request_details()
+    {
+        // テスト日時を固定
+        $testDate = Carbon::create(2024, 6, 15, 10, 0, 0);
+        Carbon::setTestNow($testDate);
+
+        // 管理者ユーザーを作成
+        $admin = Admin::factory()->create([
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+
+        // 一般ユーザーを作成
+        $user = User::factory()->create([
+            'name' => '山田太郎',
+            'email' => 'yamada@example.com',
+        ]);
+
+        // 勤怠データを作成
+        $attendance = Attendance::factory()->create([
+            'user_id' => $user->id,
+            'date' => $testDate->format('Y-m-d'),
+            'start_time' => '09:00:00',
+            'end_time' => '18:00:00',
+            'break_time' => 60,
+            'work_time' => 480,
+            'remarks' => '通常勤務：山田太郎',
+        ]);
+
+        // 修正申請を作成
+        $correctionRequest = StampCorrectionRequest::factory()->create([
+            'user_id' => $user->id,
+            'attendance_id' => $attendance->id,
+            'request_date' => $testDate->format('Y-m-d'),
+            'correction_type' => '出勤時間',
+            'before_time' => '09:00:00',
+            'after_time' => '08:30:00',
+            'reason' => '電車の遅延により遅刻',
+            'status' => 'approved',
+            'approved_at' => $testDate->format('Y-m-d H:i:s'),
+            'approved_by' => $admin->id,
+        ]);
+
+        // 管理者としてログイン
+        $this->actingAs($admin, 'admin');
+
+        // 修正申請詳細ページにアクセス
+        $response = $this->get('/admin/stamp-correction-requests/' . $correctionRequest->id);
+        $response->assertStatus(200);
+
+        // 申請者の情報が表示されていることを確認
+        $response->assertSee($user->name);
+        $response->assertSee($user->email);
+
+        // 申請内容が表示されていることを確認
+        $response->assertSee('出勤時間');
+        $response->assertSee('09:00');
+        $response->assertSee('08:30');
+        $response->assertSee('電車の遅延により遅刻');
+
+        // 申請日が表示されていることを確認
+        $response->assertSee($testDate->format('Y年n月j日'));
+
+        // 承認情報が表示されていることを確認
+        $response->assertSee('承認済み');
+        $response->assertSee($testDate->format('Y年n月j日 H:i'));
+        $response->assertSee($admin->name);
+
+        // 勤怠情報が表示されていることを確認
+        $response->assertSee($testDate->format('Y年n月j日'));
+        $response->assertSee('通常勤務：山田太郎');
+
+        // テスト日時をリセット
+        Carbon::setTestNow(null);
+    }
+
+    /**
+     * 管理者ユーザーが修正申請を承認し、勤怠情報が正しく更新されることを確認するテスト
+     */
+    public function test_admin_can_approve_correction_request()
+    {
+        // テスト日時を固定
+        $testDate = Carbon::create(2024, 6, 15, 10, 0, 0);
+        Carbon::setTestNow($testDate);
+
+        // 管理者ユーザーを作成
+        $admin = Admin::factory()->create([
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+
+        // 一般ユーザーを作成
+        $user = User::factory()->create([
+            'name' => '山田太郎',
+            'email' => 'yamada@example.com',
+        ]);
+
+        // 勤怠データを作成
+        $attendance = Attendance::factory()->create([
+            'user_id' => $user->id,
+            'date' => $testDate->format('Y-m-d'),
+            'start_time' => '09:00:00',
+            'end_time' => '18:00:00',
+            'break_time' => 60,
+            'work_time' => 480,
+            'remarks' => '通常勤務：山田太郎',
+        ]);
+
+        // 修正申請を作成
+        $correctionRequest = StampCorrectionRequest::factory()->create([
+            'user_id' => $user->id,
+            'attendance_id' => $attendance->id,
+            'request_date' => $testDate->format('Y-m-d'),
+            'correction_type' => '出勤時間',
+            'before_time' => '09:00:00',
+            'after_time' => '08:30:00',
+            'reason' => '電車の遅延により遅刻',
+            'status' => 'pending',
+        ]);
+
+        // 管理者としてログイン
+        $this->actingAs($admin, 'admin');
+
+        // 修正申請詳細ページにアクセス
+        $detailResponse = $this->get('/admin/stamp-correction-requests/' . $correctionRequest->id);
+        $detailResponse->assertStatus(200);
+
+        // 承認前の状態を確認
+        $this->assertDatabaseHas('stamp_correction_requests', [
+            'id' => $correctionRequest->id,
+            'status' => 'pending',
+        ]);
+
+        $this->assertDatabaseHas('attendances', [
+            'id' => $attendance->id,
+            'start_time' => '09:00:00',
+        ]);
+
+        // 承認リクエストを送信
+        $approveResponse = $this->post('/admin/stamp-correction-requests/' . $correctionRequest->id . '/approve');
+        $approveResponse->assertRedirect('/admin/stamp-correction-requests/list');
+
+        // 修正申請が承認されたことを確認
+        $this->assertDatabaseHas('stamp_correction_requests', [
+            'id' => $correctionRequest->id,
+            'status' => 'approved',
+            'approved_at' => $testDate->format('Y-m-d H:i:s'),
+            'approved_by' => $admin->id,
+        ]);
+
+        // 勤怠情報が更新されたことを確認
+        $this->assertDatabaseHas('attendances', [
+            'id' => $attendance->id,
+            'start_time' => '08:30:00',
+        ]);
+
+        // 承認後の詳細ページを確認
+        $afterApprovalResponse = $this->get('/admin/stamp-correction-requests/' . $correctionRequest->id);
+        $afterApprovalResponse->assertStatus(200);
+
+        // 承認情報が表示されていることを確認
+        $afterApprovalResponse->assertSee('承認済み');
+        $afterApprovalResponse->assertSee($testDate->format('Y年n月j日 H:i'));
+        $afterApprovalResponse->assertSee($admin->name);
 
         // テスト日時をリセット
         Carbon::setTestNow(null);
