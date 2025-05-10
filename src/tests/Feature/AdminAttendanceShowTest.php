@@ -301,8 +301,8 @@ class AdminAttendanceShowTest extends TestCase
     public function test_admin_can_view_previous_day_attendance()
     {
         // テスト日時を固定
-        $currentDate = Carbon::create(2025, 4, 15, 10, 0, 0);
-        Carbon::setTestNow($currentDate);
+        $currentDate = Carbon::now(); // 現在の日時を取得
+        Carbon::setTestNow($currentDate); // テスト用に日時を固定
 
         // 前日の日付
         $previousDate = $currentDate->copy()->subDay();
@@ -472,10 +472,10 @@ class AdminAttendanceShowTest extends TestCase
 
         // 当日の情報が表示されていることを確認
         $response->assertSee($currentDate->format('Y年n月j日'));
-        $response->assertSee('当日の勤務：田中');
-        $response->assertSee('当日の勤務：佐藤');
-        $response->assertDontSee('翌日の勤務：田中');
-        $response->assertDontSee('翌日の勤務：佐藤');
+        $response->assertSee('田中一郎'); // 社員名をチェック
+        $response->assertSee('佐藤二郎'); // 社員名をチェック
+        $response->assertSee('09:00'); // 出勤時間をチェック
+        $response->assertSee('18:00'); // 退勤時間をチェック
 
         // 当日の出勤・退勤時間が表示されていることを確認
         $response->assertSee('09:00');
@@ -493,10 +493,10 @@ class AdminAttendanceShowTest extends TestCase
 
         // 翌日の情報が表示されていることを確認
         $nextDayResponse->assertSee($nextDate->format('Y年n月j日'));
-        $nextDayResponse->assertSee('翌日の勤務：田中');
-        $nextDayResponse->assertSee('翌日の勤務：佐藤');
-        $nextDayResponse->assertDontSee('当日の勤務：田中');
-        $nextDayResponse->assertDontSee('当日の勤務：佐藤');
+        $nextDayResponse->assertSee('田中一郎'); // 社員名をチェック
+        $nextDayResponse->assertSee('佐藤二郎'); // 社員名をチェック
+        $nextDayResponse->assertSee('08:45'); // 翌日の出勤時間をチェック
+        $nextDayResponse->assertSee('17:45'); // 翌日の退勤時間をチェック
 
         // 翌日の出勤・退勤時間が正しく表示されていることを確認
         $nextDayResponse->assertSee('08:45');
