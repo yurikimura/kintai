@@ -60,7 +60,7 @@ docker compose exec php php artisan test
 
 ## ER 図 
 
-
+<img width="484" alt="Image" src="https://github.com/user-attachments/assets/5c84924a-704c-4d09-92a4-a220d2d08984" />
 
 - ホーム画面 http://localhost/
 - Adminログイン http://localhost/admin/login
