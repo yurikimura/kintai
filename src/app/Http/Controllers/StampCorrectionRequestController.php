@@ -39,14 +39,13 @@ class StampCorrectionRequestController extends Controller
     {
         $status = $request->input('status', 'pending');
 
-        $query = StampCorrectionRequest::with('user')
-            ->with('attendance')
+        $query = StampCorrectionRequest::with(['user', 'attendance'])
             ->where('user_id', auth()->id())
-            ->orderByRaw('(SELECT date FROM attendances WHERE attendances.id = stamp_correction_requests.attendance_id) ASC');
+            ->orderBy('created_at', 'desc');
 
         if ($status === 'pending') {
             $query->whereHas('attendance', function ($q) {
-                $q->where('status', 'pending');
+                $q->whereIn('status', ['pending', 'approved']);
             });
         } elseif ($status === 'approved') {
             $query->whereHas('attendance', function ($q) {
@@ -54,7 +53,7 @@ class StampCorrectionRequestController extends Controller
             });
         }
 
-        $requests = $query->orderBy('created_at', 'desc')->get();
+        $requests = $query->get();
 
         return view('stamp_correction_request.list', compact('requests', 'status'));
     }

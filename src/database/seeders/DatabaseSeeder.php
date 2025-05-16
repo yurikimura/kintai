@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             UserSeeder::class,
             AttendanceSeeder::class,
+            StampCorrectionRequestSeeder::class,
         ]);
         // \App\Models\User::factory(10)->create();
     }

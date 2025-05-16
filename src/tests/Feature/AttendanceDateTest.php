@@ -712,6 +712,9 @@ class AttendanceDateTest extends TestCase
         $this->assertDatabaseHas('attendances', [
             'id' => $attendance->id,
             'user_id' => $user->id,
+            'date' => now()->format('Y-m-d'),
+            'start_time' => '10:00:00',
+            'end_time' => '19:00:00',
             'status' => 'pending',
             'remarks' => '修正後の勤務内容'
         ]);

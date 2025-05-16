@@ -34,8 +34,8 @@
                     <td>{{ $attendance->date->format('m/d') }}</td>
                     <td>{{ $attendance->start_time ? $attendance->start_time->format('H:i') : '-' }}</td>
                     <td>{{ $attendance->end_time ? $attendance->end_time->format('H:i') : '-' }}</td>
-                    <td>{{ $attendance->break_time }}:00</td>
-                    <td>{{ $attendance->work_time }}:00</td>
+                    <td>{{ floor($attendance->break_time / 60) }}:{{ str_pad($attendance->break_time % 60, 2, '0', STR_PAD_LEFT) }}</td>
+                    <td>{{ floor($attendance->work_time / 60) }}:{{ str_pad($attendance->work_time % 60, 2, '0', STR_PAD_LEFT) }}</td>
                     <td>
                         <a href="{{ route('attendance.show', ['id' => $attendance->id]) }}" class="detail-link">詳細</a>
                     </td>

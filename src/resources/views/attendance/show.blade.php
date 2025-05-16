@@ -46,6 +46,7 @@
                 <div class="time-range">
                     @if($attendance->status === 'pending')
                         <div class="form-value">{{ $attendance->start_break_time ? $attendance->start_break_time->format('H:i') : '' }}<span class="time-separator">〜</span>{{ $attendance->end_break_time ? $attendance->end_break_time->format('H:i') : '' }}</div>
+                        <div class="form-value">(合計: {{ floor($attendance->break_time / 60) }}:{{ str_pad($attendance->break_time % 60, 2, '0', STR_PAD_LEFT) }})</div>
                     @else
                         <input type="time" name="start_break_time" value="{{ $attendance->start_break_time ? $attendance->start_break_time->format('H:i') : '' }}" {{ $attendance->status === 'pending' ? 'disabled' : '' }} class="@error('start_break_time') is-invalid @enderror">
                         <span class="time-separator">〜</span>

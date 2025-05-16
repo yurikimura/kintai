@@ -37,7 +37,7 @@
                     </td>
                     <td>{{ $request->user->name }}</td>
                     <td>{{ $request->attendance->date->format('Y/m/d') }}</td>
-                    <td>{{ $request->attendance->remarks }}</td>
+                    <td>{{ $request->attendance->remarks ?: '申請理由なし' }}</td>
                     <td>{{ $request->created_at->format('Y/m/d') }}</td>
                     <td>
                         <a href="{{ route('attendance.show', ['id' => $request->attendance->id]) }}" class="detail-link">詳細</a>

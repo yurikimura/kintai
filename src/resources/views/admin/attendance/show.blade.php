@@ -50,7 +50,9 @@
             </div>
         </div>
         <div class="form-actions">
-            <button type="submit" class="edit-button">修正</button>
+            @if($attendance->status === 'pending')
+                <button type="submit" class="edit-button">承認</button>
+            @endif
         </div>
     </form>
 </div>
