@@ -43,9 +43,9 @@ class StampCorrectionRequestController extends Controller
             ->where('user_id', auth()->id())
             ->orderBy('created_at', 'desc');
 
-        if ($status === 'pending') {
+        if (empty($status) || $status === 'pending') {
             $query->whereHas('attendance', function ($q) {
-                $q->whereIn('status', ['pending', 'approved']);
+                $q->whereIn('status', ['pending']);
             });
         } elseif ($status === 'approved') {
             $query->whereHas('attendance', function ($q) {

@@ -17,7 +17,6 @@
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>状態</th>
                     <th>名前</th>
                     <th>対象日時</th>
                     <th>申請理由</th>
@@ -28,13 +27,6 @@
             <tbody>
                 @foreach($requests as $request)
                 <tr>
-                    <td>
-                        @if($request->attendance->status === 'pending')
-                            承認待ち
-                        @elseif($request->attendance->status === 'approved')
-                            承認済み
-                        @endif
-                    </td>
                     <td>{{ $request->user->name }}</td>
                     <td>{{ $request->attendance->date->format('Y/m/d') }}</td>
                     <td>{{ $request->attendance->remarks ?: '申請理由なし' }}</td>
